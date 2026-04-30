@@ -1,4 +1,5 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -29,6 +30,40 @@ body {
   --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
   --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
   --font-sans: 'Geist Variable', sans-serif;
+  --font-kalam: 'Kalam', cursive;
+  --font-nunito: 'Nunito Sans', sans-serif;
+  --color-ep-cream: #FBF7F2;
+  --color-ep-warm-white: #FFFDF9;
+  --color-ep-rose: #E8B4B8;
+  --color-ep-rose-deep: #C97B81;
+  --color-ep-sage: #A8C4A2;
+  --color-ep-sage-deep: #6B8E68;
+  --color-ep-oat: #E5DCC9;
+  --color-ep-amber: #E8A87C;
+  --color-ep-sky: #A6C8D9;
+  --color-ep-lavender: #C9B8D9;
+  --color-ep-ink: #2D2A26;
+  --color-ep-soft-ink: #5C574F;
+  --color-ep-muted: #9A938A;
+  --color-ep-hairline: #E8E1D5;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-pulse-sage: pulse-sage 2s ease-in-out infinite;
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes pulse-sage {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 196, 162, 0.5); }
+    50% { box-shadow: 0 0 0 16px rgba(168, 196, 162, 0); }
+  }
+  @keyframes progress-fill {
+    from { width: 0%; }
+    to { width: var(--progress-target, 80%); }
+  }
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -243,5 +278,115 @@ body {
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* EpingJourney Landing — Scroll Reveal */
+.ep-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.ep-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sticky mobile CTA */
+.ep-sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 12px 24px;
+  background: rgba(251,247,242,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #E8E1D5;
+  transform: translateY(100%);
+  transition: transform 300ms ease;
+  display: none;
+}
+.ep-sticky-cta.visible {
+  transform: translateY(0);
+}
+@media (max-width: 768px) {
+  .ep-sticky-cta {
+    display: block;
+  }
+}
+
+/* EpingJourney Landing — Mobile responsive overrides */
+@media (max-width: 768px) {
+  /* Hide desktop nav links/buttons on mobile */
+  .ep-navbar-links {
+    display: none !important;
+  }
+  .ep-navbar-inner {
+    padding: 0 16px !important;
+  }
+
+  /* Section padding shrink */
+  .ep-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 56px !important;
+    padding-bottom: 56px !important;
+  }
+  .ep-hero {
+    padding-top: 40px !important;
+    padding-bottom: 56px !important;
+  }
+
+  /* Hero row stacks tighter */
+  .ep-hero-row {
+    gap: 32px !important;
+  }
+  .ep-hero-row > div {
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Feature rows: tighten gap, ensure copy-first reading order */
+  .ep-feature-row {
+    gap: 32px !important;
+  }
+  .ep-feature-row > * {
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+  }
+  .ep-feature-row-reverse {
+    flex-direction: column !important;
+  }
+
+  /* Leave room for the sticky CTA bar so the footer isn't covered */
+  .ep-footer {
+    padding-bottom: 96px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Even tighter on small phones */
+  .ep-section {
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+  }
+  .ep-hero {
+    padding-top: 32px !important;
+    padding-bottom: 48px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ep-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .animate-float {
+    animation: none !important;
+  }
+  .animate-pulse-sage {
+    animation: none !important;
   }
 }
