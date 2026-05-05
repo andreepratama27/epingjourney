@@ -357,8 +357,8 @@ function NavLink({ children, href }: { children: ReactNode; href: string }) {
 function SignInButton() {
   const [hovered, setHovered] = useState(false)
   return (
-    <button
-      type="button"
+    <a
+      href="/dashboard"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -372,10 +372,12 @@ function SignInButton() {
         padding: '7px 18px',
         cursor: 'pointer',
         transition: 'all 200ms ease',
+        textDecoration: 'none',
+        display: 'inline-block',
       }}
     >
       Masuk
-    </button>
+    </a>
   )
 }
 

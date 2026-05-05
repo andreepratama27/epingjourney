@@ -1,0 +1,1678 @@
+import { useEffect, useState } from 'react'
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+
+const T = {
+  cream: '#FBF7F2',
+  warmWhite: '#FFFDF9',
+  oat: '#E5DCC9',
+  sand: '#F5F0E8',
+  rose: '#E8B4B8',
+  roseDeep: '#C97B81',
+  sage: '#A8C4A2',
+  sageDeep: '#6B8E68',
+  amber: '#E8A87C',
+  amberDeep: '#B86B2A',
+  sky: '#A6C8D9',
+  ink: '#2D2A26',
+  softInk: '#5C574F',
+  muted: '#9A938A',
+  hairline: '#E8E1D5',
+} as const
+
+/* ── Dark palette used inside the timer overlay ── */
+const D = {
+  bg: 'linear-gradient(160deg, #1E1B17 0%, #2D2520 55%, #1A1714 100%)',
+  text: '#F5EDE3',
+  muted: 'rgba(245,237,227,0.5)',
+  hairline: 'rgba(245,237,227,0.1)',
+  glass: 'rgba(245,237,227,0.07)',
+  subtle: 'rgba(245,237,227,0.15)',
+} as const
+
+/* ============================================================
+   MOCK DATA
+   ============================================================ */
+
+const NEXT_SESSION_HOUR = 18
+const NEXT_SESSION_MINUTE = 0
+const INTERVAL_MINUTES = 180 // 3-hour pumping interval
+
+type SessionStatus = 'done' | 'overdue' | 'upcoming'
+
+interface Session {
+  id: number
+  time: string
+  status: SessionStatus
+  volume: string | null
+  duration: string | null
+  overdueMin?: number
+}
+
+const SESSIONS: Session[] = [
+  { id: 1, time: '06:00', status: 'done',     volume: '3,2 oz', duration: '18 mnt' },
+  { id: 2, time: '09:00', status: 'done',     volume: '3,5 oz', duration: '20 mnt' },
+  { id: 3, time: '12:00', status: 'done',     volume: '4,1 oz', duration: '22 mnt' },
+  { id: 4, time: '15:00', status: 'overdue',  volume: null,     duration: null, overdueMin: 14 },
+  { id: 5, time: '18:00', status: 'upcoming', volume: null,     duration: null },
+  { id: 6, time: '21:00', status: 'upcoming', volume: null,     duration: null },
+]
+
+const TOTAL_OZ = 10.8   // 3.2 + 3.5 + 4.1
+const TARGET_OZ = 30
+const SESSIONS_DONE = 3
+const TOTAL_SESSIONS = 6
+const AVG_DURATION = 20  // minutes
+const STREAK = 7         // days
+
+/* ============================================================
+   HOOKS
+   ============================================================ */
+
+function useMount() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60)
+    return () => clearTimeout(t)
+  }, [])
+  return mounted
+}
+
+function useCurrentTime() {
+  const [time, setTime] = useState<Date | null>(null)
+  useEffect(() => {
+    setTime(new Date())
+    const id = setInterval(() => setTime(new Date()), 60_000)
+    return () => clearInterval(id)
+  }, [])
+  return time
+}
+
+function useCountdown(targetHour: number, targetMinute: number) {
+  const [state, setState] = useState({ display: '--:--:--', minutesLeft: INTERVAL_MINUTES })
+
+  useEffect(() => {
+    const compute = () => {
+      const now = new Date()
+      const target = new Date()
+      target.setHours(targetHour, targetMinute, 0, 0)
+      if (target <= now) target.setDate(target.getDate() + 1)
+
+      const diffMs = target.getTime() - now.getTime()
+      const totalSec = Math.floor(diffMs / 1000)
+      const h = Math.floor(totalSec / 3600)
+      const m = Math.floor((totalSec % 3600) / 60)
+      const s = totalSec % 60
+
+      setState({
+        display: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`,
+        minutesLeft: Math.floor(totalSec / 60),
+      })
+    }
+    compute()
+    const id = setInterval(compute, 1000)
+    return () => clearInterval(id)
+  }, [targetHour, targetMinute])
+
+  return state
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function getGreeting(hour: number) {
+  if (hour < 11) return { text: 'Selamat pagi', emoji: '🌤️' }
+  if (hour < 15) return { text: 'Selamat siang', emoji: '☀️' }
+  if (hour < 18) return { text: 'Selamat sore', emoji: '🌅' }
+  return { text: 'Selamat malam', emoji: '🌙' }
+}
+
+/* ============================================================
+   TIMER — TYPES & HELPERS
+   ============================================================ */
+
+type TimerPhase = 'running' | 'paused' | 'logging'
+type PumpSide  = 'kiri' | 'kanan' | 'keduanya'
+
+const SESSION_TARGET_SEC = 20 * 60  // 20-min expected session
+
+function formatElapsed(s: number): string {
+  const h  = Math.floor(s / 3600)
+  const m  = Math.floor((s % 3600) / 60)
+  const sc = s % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(sc).padStart(2, '0')
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
+const PUMP_SIDES: { id: PumpSide; label: string }[] = [
+  { id: 'kiri',     label: '◀  Kiri'    },
+  { id: 'kanan',    label: 'Kanan  ▶'   },
+  { id: 'keduanya', label: 'Keduanya'   },
+]
+
+/* ============================================================
+   DASHBOARD NAV
+   ============================================================ */
+
+function DashboardNav() {
+  const [avatarHovered, setAvatarHovered] = useState(false)
+
+  return (
+    <nav
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        background: 'rgba(251,247,242,0.93)',
+        backdropFilter: 'blur(14px)',
+        borderBottom: `1px solid ${T.hairline}`,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 960,
+          margin: '0 auto',
+          padding: '0 24px',
+          height: 60,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
+        {/* Logo */}
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
+          <span style={{ fontSize: 20 }}>🤱</span>
+          <span
+            style={{
+              fontFamily: 'Kalam, cursive',
+              fontWeight: 700,
+              fontSize: 18,
+              color: T.ink,
+              lineHeight: 1,
+            }}
+          >
+            EpingJourney
+          </span>
+        </a>
+
+        {/* Page badge */}
+        <span
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 11,
+            fontWeight: 600,
+            color: T.muted,
+            background: T.oat,
+            borderRadius: 100,
+            padding: '3px 10px',
+            letterSpacing: 0.3,
+            flexShrink: 0,
+          }}
+        >
+          Dashboard
+        </span>
+
+        <div style={{ flex: 1 }} />
+
+        {/* User */}
+        <div
+          onMouseEnter={() => setAvatarHovered(true)}
+          onMouseLeave={() => setAvatarHovered(false)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            cursor: 'pointer',
+            padding: '4px 8px 4px 4px',
+            borderRadius: 100,
+            background: avatarHovered ? T.oat : 'transparent',
+            transition: 'background 200ms ease',
+          }}
+        >
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: `linear-gradient(135deg, ${T.sage}, ${T.sageDeep})`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 15,
+              flexShrink: 0,
+            }}
+          >
+            🤱
+          </div>
+          <span
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 13,
+              fontWeight: 600,
+              color: T.softInk,
+            }}
+          >
+            Maya
+          </span>
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+/* ============================================================
+   COUNTDOWN RING
+   ============================================================ */
+
+function CountdownRing({
+  minutesLeft,
+  totalMinutes,
+  display,
+  visible,
+}: {
+  minutesLeft: number
+  totalMinutes: number
+  display: string
+  visible: boolean
+}) {
+  const SIZE = 156
+  const STROKE = 9
+  const R = (SIZE - STROKE) / 2         // 73.5
+  const C = 2 * Math.PI * R             // ~461.8
+
+  // Ring fills as session approaches
+  const fillRatio = Math.max(0, Math.min(1, 1 - minutesLeft / totalMinutes))
+  const dashOffset = C * (1 - fillRatio)
+
+  // Color: sage → amber → rose based on urgency
+  const ringColor =
+    minutesLeft > 90 ? T.sage
+    : minutesLeft > 30 ? T.amber
+    : T.roseDeep
+
+  const ringEmoji =
+    minutesLeft > 90 ? '🍵'
+    : minutesLeft > 30 ? '⏰'
+    : '🔔'
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: SIZE,
+        height: SIZE,
+        flexShrink: 0,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'scale(1)' : 'scale(0.85)',
+        transition: 'opacity 0.5s ease 0.1s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s',
+      }}
+    >
+      <svg
+        width={SIZE}
+        height={SIZE}
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        style={{ transform: 'rotate(-90deg)' }}
+      >
+        {/* Track */}
+        <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke={T.oat} strokeWidth={STROKE} />
+        {/* Progress arc */}
+        <circle
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={R}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth={STROKE}
+          strokeDasharray={C}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          style={{
+            transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.8s ease',
+          }}
+        />
+      </svg>
+
+      {/* Center */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+        }}
+      >
+        <span style={{ fontSize: 26, lineHeight: 1 }}>{ringEmoji}</span>
+        <span
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontWeight: 800,
+            fontSize: 13,
+            color: T.ink,
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: 0.5,
+          }}
+        >
+          {display}
+        </span>
+        <span
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 10,
+            fontWeight: 600,
+            color: T.muted,
+            letterSpacing: 1,
+            textTransform: 'uppercase',
+          }}
+        >
+          menuju 18:00
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   SECTION 1 — WELCOME HEADER
+   ============================================================ */
+
+function WelcomeSection({ onStartTimer }: { onStartTimer: () => void }) {
+  const mounted = useMount()
+  const now = useCurrentTime()
+  const { display, minutesLeft } = useCountdown(NEXT_SESSION_HOUR, NEXT_SESSION_MINUTE)
+
+  const greeting = now ? getGreeting(now.getHours()) : { text: 'Halo', emoji: '👋' }
+
+  const dateStr = now
+    ? now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : '–'
+
+  const hoursLeft = Math.floor(minutesLeft / 60)
+  const minsLeft = minutesLeft % 60
+  const nextLabel =
+    hoursLeft > 0 ? `dalam ${hoursLeft}j ${minsLeft}m` : `dalam ${minsLeft} menit`
+
+  const [primaryHover, setPrimaryHover] = useState(false)
+  const [secondaryHover, setSecondaryHover] = useState(false)
+
+  // Overdue session
+  const overdueSession = SESSIONS.find((s) => s.status === 'overdue')
+
+  return (
+    <section
+      style={{
+        background: T.cream,
+        padding: '32px 24px 36px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Ambient glow — sage top-right */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-20%',
+          right: '-8%',
+          width: '45%',
+          height: '160%',
+          background: 'radial-gradient(ellipse, rgba(168,196,162,0.2) 0%, transparent 65%)',
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Ambient glow — rose bottom-left */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-30%',
+          left: '-5%',
+          width: '35%',
+          height: '130%',
+          background: 'radial-gradient(ellipse, rgba(232,180,184,0.14) 0%, transparent 65%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div style={{ maxWidth: 960, margin: '0 auto', position: 'relative' }}>
+        {/* Main row: greeting + ring */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 36,
+            flexWrap: 'wrap',
+            marginBottom: 28,
+          }}
+        >
+          {/* Left — greeting text */}
+          <div
+            style={{
+              flex: '1 1 300px',
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0)' : 'translateY(12px)',
+              transition: 'opacity 0.5s ease, transform 0.5s ease',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 13,
+                fontWeight: 600,
+                color: T.sageDeep,
+                letterSpacing: 0.4,
+                marginBottom: 4,
+              }}
+            >
+              {greeting.emoji} {greeting.text}
+            </p>
+
+            <h1
+              style={{
+                fontFamily: 'Kalam, cursive',
+                fontWeight: 700,
+                fontSize: 'clamp(28px, 4vw, 42px)',
+                color: T.ink,
+                lineHeight: 1.2,
+                marginBottom: 6,
+              }}
+            >
+              Maya! 👋
+            </h1>
+
+            <p
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 13,
+                color: T.muted,
+                marginBottom: 22,
+                textTransform: 'capitalize',
+              }}
+            >
+              {dateStr}
+            </p>
+
+            {/* Next session chip */}
+            <div
+              style={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                gap: 5,
+                background: T.warmWhite,
+                border: `1px solid ${T.hairline}`,
+                borderRadius: 16,
+                padding: '14px 20px',
+                boxShadow: '0 2px 12px rgba(45,42,38,0.05)',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: T.muted,
+                  letterSpacing: 1.8,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Sesi Berikutnya
+              </span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <span
+                  style={{
+                    fontFamily: 'Kalam, cursive',
+                    fontWeight: 700,
+                    fontSize: 30,
+                    color: T.ink,
+                    fontVariantNumeric: 'tabular-nums',
+                    lineHeight: 1,
+                  }}
+                >
+                  18:00
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'Nunito Sans, sans-serif',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: T.sageDeep,
+                  }}
+                >
+                  {mounted ? nextLabel : '–'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — countdown ring */}
+          <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'center' }}>
+            <CountdownRing
+              minutesLeft={minutesLeft}
+              totalMinutes={INTERVAL_MINUTES}
+              display={display}
+              visible={mounted}
+            />
+          </div>
+        </div>
+
+        {/* CTA Buttons */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            flexWrap: 'wrap',
+            marginBottom: overdueSession ? 18 : 0,
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s',
+          }}
+        >
+          <button
+            type="button"
+            onMouseEnter={() => setPrimaryHover(true)}
+            onMouseLeave={() => setPrimaryHover(false)}
+            onClick={() => onStartTimer()}
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontWeight: 700,
+              fontSize: 15,
+              padding: '13px 28px',
+              borderRadius: 12,
+              cursor: 'pointer',
+              border: 'none',
+              background: primaryHover ? T.roseDeep : T.rose,
+              color: '#FFFDF9',
+              boxShadow: primaryHover
+                ? '0 8px 24px rgba(201,123,129,0.32)'
+                : '0 4px 14px rgba(232,180,184,0.28)',
+              transition: 'all 200ms ease',
+              transform: primaryHover ? 'scale(1.02)' : 'scale(1)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            ▶&nbsp; Mulai Timer
+          </button>
+
+          <button
+            type="button"
+            onMouseEnter={() => setSecondaryHover(true)}
+            onMouseLeave={() => setSecondaryHover(false)}
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontWeight: 600,
+              fontSize: 15,
+              padding: '13px 24px',
+              borderRadius: 12,
+              cursor: 'pointer',
+              background: 'transparent',
+              color: secondaryHover ? T.roseDeep : T.softInk,
+              border: `1.5px solid ${secondaryHover ? T.rose : T.hairline}`,
+              transition: 'all 200ms ease',
+            }}
+          >
+            + Catat Manual
+          </button>
+        </div>
+
+        {/* Overdue alert banner */}
+        {overdueSession && (
+          <div
+            style={{
+              padding: '13px 16px',
+              background: 'rgba(232,168,124,0.1)',
+              border: '1px solid rgba(232,168,124,0.35)',
+              borderRadius: 14,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              flexWrap: 'wrap',
+              opacity: mounted ? 1 : 0,
+              transition: 'opacity 0.5s ease 0.25s',
+            }}
+          >
+            <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <span
+                style={{
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  color: T.amberDeep,
+                }}
+              >
+                Sesi {overdueSession.time} terlewat {overdueSession.overdueMin} menit.
+              </span>
+              <span
+                style={{
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontSize: 13,
+                  color: T.muted,
+                  marginLeft: 6,
+                }}
+              >
+                Catat atau lewati?
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                style={{
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  border: 'none',
+                  background: T.amber,
+                  color: '#FFFDF9',
+                  flexShrink: 0,
+                }}
+              >
+                Catat
+              </button>
+              <button
+                type="button"
+                style={{
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontWeight: 600,
+                  fontSize: 12,
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  border: `1px solid ${T.hairline}`,
+                  color: T.muted,
+                  flexShrink: 0,
+                }}
+              >
+                Lewati
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
+   SECTION 2 — STATS ROW
+   ============================================================ */
+
+interface StatCardProps {
+  emoji: string
+  value: string
+  label: string
+  sub: string
+  progress?: number
+  progressColor?: string
+  visible: boolean
+  delay: number
+}
+
+function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, visible, delay }: StatCardProps) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: T.warmWhite,
+        border: `1px solid ${T.hairline}`,
+        borderRadius: 20,
+        padding: '20px 22px 18px',
+        boxShadow: hovered ? '0 10px 28px rgba(45,42,38,0.09)' : '0 2px 10px rgba(45,42,38,0.04)',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'box-shadow 250ms ease, transform 250ms ease',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        opacity: visible ? 1 : 0,
+        // opacity transition uses the stagger delay
+        // we keep it separate from the hover transitions above by not using 'all'
+      }}
+      // we drive opacity via a wrapping style tag approach using CSS vars — but for simplicity,
+      // we handle the stagger via a wrapper div below
+    >
+      {/* Top row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 22 }}>{emoji}</span>
+        <span
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 10,
+            fontWeight: 700,
+            color: T.muted,
+            letterSpacing: 1.5,
+            textTransform: 'uppercase',
+          }}
+        >
+          {label}
+        </span>
+      </div>
+
+      {/* Value */}
+      <div>
+        <p
+          style={{
+            fontFamily: 'Kalam, cursive',
+            fontWeight: 700,
+            fontSize: 'clamp(22px, 3vw, 30px)',
+            color: T.ink,
+            lineHeight: 1.1,
+            marginBottom: 3,
+          }}
+        >
+          {value}
+        </p>
+        <p
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 12,
+            color: T.muted,
+          }}
+        >
+          {sub}
+        </p>
+      </div>
+
+      {/* Optional progress bar */}
+      {progress !== undefined && (
+        <div>
+          <div
+            style={{
+              height: 5,
+              background: T.oat,
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                background: `linear-gradient(90deg, ${progressColor}, ${progressColor}cc)`,
+                borderRadius: 3,
+                width: visible ? `${Math.round(progress * 100)}%` : '0%',
+                transition: `width 1.2s cubic-bezier(0.4, 0, 0.2, 1) ${delay + 300}ms`,
+              }}
+            />
+          </div>
+          <p
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 11,
+              color: T.muted,
+              marginTop: 4,
+            }}
+          >
+            {Math.round(progress * 100)}% dari target
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatsRow() {
+  const visible = useMount()
+
+  const cards: StatCardProps[] = [
+    {
+      emoji: '🥛',
+      value: `${TOTAL_OZ} oz`,
+      label: 'Total Output',
+      sub: `Target: ${TARGET_OZ} oz`,
+      progress: TOTAL_OZ / TARGET_OZ,
+      progressColor: T.sage,
+      visible,
+      delay: 0,
+    },
+    {
+      emoji: '✅',
+      value: `${SESSIONS_DONE} / ${TOTAL_SESSIONS}`,
+      label: 'Sesi Selesai',
+      sub: `${TOTAL_SESSIONS - SESSIONS_DONE} sesi tersisa`,
+      progress: SESSIONS_DONE / TOTAL_SESSIONS,
+      progressColor: T.rose,
+      visible,
+      delay: 80,
+    },
+    {
+      emoji: '⏱️',
+      value: `${AVG_DURATION} mnt`,
+      label: 'Rata-rata',
+      sub: 'Durasi per sesi',
+      visible,
+      delay: 160,
+    },
+    {
+      emoji: '🔥',
+      value: `${STREAK} hari`,
+      label: 'Streak',
+      sub: 'Terus semangat, Bunda!',
+      visible,
+      delay: 240,
+    },
+  ]
+
+  return (
+    <section
+      style={{
+        background: T.cream,
+        padding: '0 24px 28px',
+      }}
+    >
+      <div style={{ maxWidth: 960, margin: '0 auto' }}>
+        <p
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            color: T.muted,
+            marginBottom: 14,
+          }}
+        >
+          Ringkasan Hari Ini
+        </p>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+            gap: 14,
+          }}
+        >
+          {cards.map((card) => (
+            /* stagger wrapper */
+            <div
+              key={card.label}
+              style={{
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateY(0)' : 'translateY(14px)',
+                transition: `opacity 0.5s ease ${card.delay}ms, transform 0.5s ease ${card.delay}ms`,
+              }}
+            >
+              <StatCard {...card} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
+   SECTION 3 — SESSION TIMELINE
+   ============================================================ */
+
+const STATUS_CFG = {
+  done: {
+    dot: T.sageDeep,
+    dotBg: 'rgba(107,142,104,0.12)',
+    icon: '✓',
+    timeColor: T.ink,
+    labelColor: T.softInk,
+  },
+  overdue: {
+    dot: T.amber,
+    dotBg: 'rgba(232,168,124,0.15)',
+    icon: '!',
+    timeColor: T.amber,
+    labelColor: T.amberDeep,
+  },
+  upcoming: {
+    dot: T.sky,
+    dotBg: 'rgba(166,200,217,0.14)',
+    icon: '◷',
+    timeColor: T.muted,
+    labelColor: T.muted,
+  },
+} as const
+
+function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) {
+  const cfg = STATUS_CFG[session.status]
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '12px 10px',
+        borderBottom: isLast ? 'none' : `1px solid ${T.hairline}`,
+        background: hovered
+          ? session.status === 'overdue'
+            ? 'rgba(232,168,124,0.06)'
+            : 'rgba(45,42,38,0.018)'
+          : 'transparent',
+        borderRadius: 10,
+        transition: 'background 200ms ease',
+        gap: 12,
+        margin: '0 -10px',
+      }}
+    >
+      {/* Status dot */}
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          background: cfg.dotBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          fontSize: session.status === 'done' ? 12 : 11,
+          fontWeight: 800,
+          color: cfg.dot,
+          fontFamily: 'Nunito Sans, sans-serif',
+        }}
+      >
+        {cfg.icon}
+      </div>
+
+      {/* Time */}
+      <span
+        style={{
+          fontFamily: 'Nunito Sans, sans-serif',
+          fontWeight: 700,
+          fontSize: 14,
+          color: cfg.timeColor,
+          fontVariantNumeric: 'tabular-nums',
+          width: 44,
+          flexShrink: 0,
+        }}
+      >
+        {session.time}
+      </span>
+
+      {/* Label / details */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {session.status === 'done' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontWeight: 700,
+                fontSize: 14,
+                color: T.ink,
+              }}
+            >
+              {session.volume}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 12,
+                color: T.muted,
+              }}
+            >
+              · {session.duration}
+            </span>
+          </div>
+        )}
+        {session.status === 'overdue' && (
+          <span
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontWeight: 600,
+              fontSize: 13,
+              color: cfg.labelColor,
+            }}
+          >
+            Terlewat {session.overdueMin} menit
+          </span>
+        )}
+        {session.status === 'upcoming' && (
+          <span
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 13,
+              color: T.muted,
+            }}
+          >
+            Akan datang
+          </span>
+        )}
+      </div>
+
+      {/* Action / badge */}
+      {session.status === 'done' && (
+        <span
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 11,
+            fontWeight: 700,
+            color: T.sageDeep,
+            background: 'rgba(107,142,104,0.1)',
+            borderRadius: 20,
+            padding: '3px 10px',
+            flexShrink: 0,
+          }}
+        >
+          Selesai
+        </span>
+      )}
+      {session.status === 'overdue' && (
+        <button
+          type="button"
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#FFFDF9',
+            background: T.amber,
+            border: 'none',
+            borderRadius: 8,
+            padding: '5px 13px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          Catat
+        </button>
+      )}
+      {session.status === 'upcoming' && session.id === 5 && (
+        <button
+          type="button"
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 12,
+            fontWeight: 700,
+            color: T.roseDeep,
+            background: 'rgba(232,180,184,0.15)',
+            border: `1px solid rgba(232,180,184,0.4)`,
+            borderRadius: 8,
+            padding: '5px 13px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          Mulai
+        </button>
+      )}
+    </div>
+  )
+}
+
+function SessionTimeline() {
+  const visible = useMount()
+  const [geserHover, setGeserHover] = useState(false)
+
+  const doneSessions = SESSIONS.filter((s) => s.status === 'done').length
+  const overdueSessions = SESSIONS.filter((s) => s.status === 'overdue').length
+  const upcomingSessions = SESSIONS.filter((s) => s.status === 'upcoming').length
+
+  const legend = [
+    { label: `${doneSessions} selesai`, color: T.sageDeep },
+    { label: `${overdueSessions} terlewat`, color: T.amber },
+    { label: `${upcomingSessions} akan datang`, color: T.sky },
+  ]
+
+  return (
+    <section
+      style={{
+        background: T.cream,
+        padding: '0 24px 52px',
+      }}
+    >
+      <div style={{ maxWidth: 960, margin: '0 auto' }}>
+        <p
+          style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            color: T.muted,
+            marginBottom: 14,
+          }}
+        >
+          Jadwal Hari Ini
+        </p>
+
+        <div
+          style={{
+            background: T.warmWhite,
+            border: `1px solid ${T.hairline}`,
+            borderRadius: 22,
+            overflow: 'hidden',
+            boxShadow: '0 2px 16px rgba(45,42,38,0.05)',
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(16px)',
+            transition: 'opacity 0.55s ease 0.1s, transform 0.55s ease 0.1s',
+          }}
+        >
+          {/* Card header */}
+          <div
+            style={{
+              padding: '15px 20px',
+              borderBottom: `1px solid ${T.hairline}`,
+              background: T.sand,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 15 }}>📅</span>
+              <span
+                style={{
+                  fontFamily: 'Kalam, cursive',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: T.ink,
+                }}
+              >
+                {SESSIONS.length} Sesi Hari Ini
+              </span>
+            </div>
+
+            {/* Mini legend badges */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {legend.map(({ label, color }) => (
+                <span
+                  key={label}
+                  style={{
+                    fontFamily: 'Nunito Sans, sans-serif',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color,
+                    background: `${color}1A`,
+                    borderRadius: 20,
+                    padding: '3px 9px',
+                  }}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Session rows */}
+          <div style={{ padding: '6px 20px 6px' }}>
+            {SESSIONS.map((session, i) => (
+              <SessionRow
+                key={session.id}
+                session={session}
+                isLast={i === SESSIONS.length - 1}
+              />
+            ))}
+          </div>
+
+          {/* Card footer */}
+          <div
+            style={{
+              padding: '14px 20px 16px',
+              borderTop: `1px solid ${T.hairline}`,
+              background: T.sand,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 12,
+                color: T.muted,
+              }}
+            >
+              Interval tiap 3 jam · Sesi terakhir 21:00
+            </p>
+
+            <button
+              type="button"
+              onMouseEnter={() => setGeserHover(true)}
+              onMouseLeave={() => setGeserHover(false)}
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 13,
+                fontWeight: 700,
+                color: geserHover ? T.roseDeep : T.softInk,
+                background: 'transparent',
+                border: `1.5px solid ${geserHover ? T.rose : T.hairline}`,
+                borderRadius: 9,
+                padding: '7px 16px',
+                cursor: 'pointer',
+                transition: 'all 200ms ease',
+              }}
+            >
+              Geser Jadwal →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
+   DASHBOARD PAGE ROOT
+   ============================================================ */
+
+/* ============================================================
+   TIMER RING  (inside overlay)
+   ============================================================ */
+
+function TimerRing({ elapsed, visible }: { elapsed: number; visible: boolean }) {
+  const SIZE   = 240
+  const STROKE = 12
+  const R      = (SIZE - STROKE) / 2       // 114
+  const C      = 2 * Math.PI * R            // ≈ 716.3
+
+  const progress   = Math.min(1, elapsed / SESSION_TARGET_SEC)
+  const dashOffset = C * (1 - progress)
+  const ringColor  =
+    progress < 0.5  ? T.sage
+    : progress < 0.85 ? T.amber
+    : T.rose
+
+  return (
+    <div style={{ position: 'relative', width: SIZE, height: SIZE }}>
+      <svg
+        width={SIZE}
+        height={SIZE}
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        style={{ transform: 'rotate(-90deg)' }}
+      >
+        {/* track */}
+        <circle
+          cx={SIZE / 2} cy={SIZE / 2} r={R}
+          fill="none" stroke={D.glass} strokeWidth={STROKE}
+        />
+        {/* progress arc */}
+        <circle
+          cx={SIZE / 2} cy={SIZE / 2} r={R}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth={STROKE}
+          strokeDasharray={C}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          style={{
+            transition: 'stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1), stroke 0.8s ease',
+            filter: `drop-shadow(0 0 10px ${ringColor}88)`,
+          }}
+        />
+      </svg>
+
+      {/* Center digits */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 6,
+      }}>
+        <span style={{
+          fontFamily: 'Nunito Sans, sans-serif',
+          fontWeight: 800,
+          fontSize: elapsed >= 3600 ? 38 : 54,
+          color: D.text,
+          fontVariantNumeric: 'tabular-nums',
+          letterSpacing: 2, lineHeight: 1,
+        }}>
+          {visible ? formatElapsed(elapsed) : '00:00'}
+        </span>
+        <span style={{
+          fontFamily: 'Nunito Sans, sans-serif',
+          fontSize: 11, fontWeight: 600,
+          color: D.muted, letterSpacing: 2,
+          textTransform: 'uppercase',
+        }}>
+          {Math.floor(elapsed / 60)} / 20 mnt
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   ACTIVE TIMER OVERLAY
+   ============================================================ */
+
+function ActiveTimerOverlay({
+  visible,
+  onClose,
+}: {
+  visible: boolean
+  onClose: () => void
+}) {
+  const [show,             setShow]             = useState(false)
+  const [phase,            setPhase]            = useState<TimerPhase>('running')
+  const [side,             setSide]             = useState<PumpSide>('keduanya')
+  const [volume,           setVolume]           = useState('')
+  const [unit,             setUnit]             = useState<'oz' | 'ml'>('oz')
+  const [elapsed,          setElapsed]          = useState(0)
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null)
+
+  // Animate in + reset every open
+  useEffect(() => {
+    if (visible) {
+      setPhase('running')
+      setSide('keduanya')
+      setVolume('')
+      setUnit('oz')
+      setElapsed(0)
+      setSessionStartTime(new Date())
+      const t = setTimeout(() => setShow(true), 20)
+      return () => clearTimeout(t)
+    }
+    setShow(false)
+  }, [visible])
+
+  // Tick only when running
+  useEffect(() => {
+    if (!visible || phase !== 'running') return
+    const id = setInterval(() => setElapsed(s => s + 1), 1000)
+    return () => clearInterval(id)
+  }, [visible, phase])
+
+  const togglePause = () =>
+    setPhase(p => (p === 'running' ? 'paused' : 'running'))
+  const handleStop    = () => setPhase('logging')
+  const handleSave    = () => onClose()
+  const handleSkipLog = () => onClose()
+
+  const startedAtStr = sessionStartTime
+    ? `${String(sessionStartTime.getHours()).padStart(2, '0')}:${String(sessionStartTime.getMinutes()).padStart(2, '0')}`
+    : '--:--'
+
+  const statusLabel =
+    phase === 'running' ? 'Sesi Berlangsung'
+    : phase === 'paused'  ? 'Dijeda'
+    : 'Catat Hasil'
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      pointerEvents: visible ? 'all' : 'none',
+    }}>
+      {/* Dim backdrop */}
+      <div
+        onClick={phase === 'logging' ? handleSkipLog : undefined}
+        style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          opacity: show ? 1 : 0,
+          transition: 'opacity 0.3s ease',
+        }}
+      />
+
+      {/* Sheet — slides up */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0, left: 0, right: 0,
+        background: D.bg,
+        borderRadius: '28px 28px 0 0',
+        display: 'flex', flexDirection: 'column',
+        maxHeight: '96vh', overflow: 'hidden',
+        transform: show ? 'translateY(0)' : 'translateY(100%)',
+        transition: 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)',
+      }}>
+
+        {/* Drag handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 0' }}>
+          <div style={{ width: 36, height: 4, background: D.hairline, borderRadius: 2 }} />
+        </div>
+
+        {/* Header */}
+        <div style={{ padding: '12px 24px 0', display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: phase === 'running' ? T.sage : D.muted,
+              display: 'inline-block', flexShrink: 0,
+              boxShadow: phase === 'running' ? `0 0 0 4px ${T.sage}28` : 'none',
+              transition: 'all 0.4s ease',
+            }} />
+            <span style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 11, fontWeight: 700,
+              color: D.muted, letterSpacing: 1.8,
+              textTransform: 'uppercase',
+            }}>
+              {statusLabel}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: D.glass, border: `1px solid ${D.hairline}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: D.muted, flexShrink: 0,
+              fontFamily: 'Nunito Sans, sans-serif', fontSize: 14,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Ring + session info */}
+        <div style={{
+          flex: 1,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '28px 24px 16px', gap: 16,
+        }}>
+          <TimerRing elapsed={elapsed} visible={visible} />
+          <p style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 13, color: D.muted, textAlign: 'center',
+          }}>
+            Dimulai {startedAtStr} · Sesi ke-{SESSIONS_DONE + 1} hari ini
+          </p>
+        </div>
+
+        {/* Side selector */}
+        <div style={{ padding: '0 24px 20px' }}>
+          <p style={{
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontSize: 10, fontWeight: 700, color: D.muted,
+            letterSpacing: 2, textTransform: 'uppercase',
+            marginBottom: 10, textAlign: 'center',
+          }}>
+            Sisi Pumping
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {PUMP_SIDES.map(({ id, label }) => {
+              const active = side === id
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSide(id)}
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Nunito Sans, sans-serif',
+                    fontSize: 13, fontWeight: 700,
+                    color: active ? '#2D2A26' : D.muted,
+                    background: active ? T.rose : D.glass,
+                    border: `1px solid ${active ? T.rose : D.hairline}`,
+                    borderRadius: 12, padding: '11px 4px',
+                    cursor: 'pointer', transition: 'all 200ms ease',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Action area */}
+        <div style={{
+          borderTop: `1px solid ${D.hairline}`,
+          padding: '20px 24px 32px',
+        }}>
+          {phase !== 'logging' ? (
+            /* Running / Paused */
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                type="button"
+                onClick={togglePause}
+                style={{
+                  flex: 1,
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontSize: 15, fontWeight: 700,
+                  color: D.text,
+                  background: D.glass, border: `1.5px solid ${D.subtle}`,
+                  borderRadius: 14, padding: '15px 0',
+                  cursor: 'pointer', transition: 'all 200ms ease',
+                }}
+              >
+                {phase === 'paused' ? '▶ Lanjutkan' : '⏸ Jeda'}
+              </button>
+              <button
+                type="button"
+                onClick={handleStop}
+                style={{
+                  flex: 2,
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontSize: 15, fontWeight: 700,
+                  color: '#2D2A26',
+                  background: T.rose, border: 'none',
+                  borderRadius: 14, padding: '15px 0',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(232,180,184,0.28)',
+                  transition: 'all 200ms ease',
+                }}
+              >
+                ⏹ Stop & Catat
+              </button>
+            </div>
+          ) : (
+            /* Logging */
+            <div>
+              <p style={{
+                fontFamily: 'Kalam, cursive', fontWeight: 700,
+                fontSize: 18, color: D.text,
+                textAlign: 'center', marginBottom: 16,
+              }}>
+                Berapa hasilnya, Bunda? 🥛
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <input
+                  // biome-ignore lint/a11y/noAutofocus: intentional UX in a modal
+                  autoFocus
+                  type="number"
+                  inputMode="decimal"
+                  value={volume}
+                  onChange={e => setVolume(e.target.value)}
+                  placeholder="0.0"
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Kalam, cursive', fontWeight: 700, fontSize: 44,
+                    color: volume ? D.text : D.muted,
+                    background: D.glass,
+                    border: `1.5px solid ${volume ? D.subtle : D.hairline}`,
+                    borderRadius: 14, padding: '10px 16px',
+                    outline: 'none', textAlign: 'center',
+                    fontVariantNumeric: 'tabular-nums',
+                    transition: 'border-color 200ms ease',
+                  }}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                  {(['oz', 'ml'] as const).map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setUnit(u)}
+                      style={{
+                        fontFamily: 'Nunito Sans, sans-serif',
+                        fontSize: 13, fontWeight: 700,
+                        color: unit === u ? '#2D2A26' : D.muted,
+                        background: unit === u ? T.sage : D.glass,
+                        border: `1px solid ${unit === u ? T.sage : D.hairline}`,
+                        borderRadius: 8, padding: '7px 16px',
+                        cursor: 'pointer', transition: 'all 150ms ease',
+                      }}
+                    >
+                      {u}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={handleSkipLog}
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Nunito Sans, sans-serif',
+                    fontSize: 14, fontWeight: 600,
+                    color: D.muted, background: 'transparent',
+                    border: `1.5px solid ${D.hairline}`,
+                    borderRadius: 12, padding: '13px 0',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Lewati
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  style={{
+                    flex: 3,
+                    fontFamily: 'Nunito Sans, sans-serif',
+                    fontSize: 15, fontWeight: 700,
+                    color: volume ? '#2D2A26' : D.muted,
+                    background: volume ? T.rose : D.glass,
+                    border: `1.5px solid ${volume ? T.rose : D.hairline}`,
+                    borderRadius: 12, padding: '13px 0',
+                    cursor: 'pointer', transition: 'all 250ms ease',
+                    boxShadow: volume ? '0 6px 20px rgba(232,180,184,0.28)' : 'none',
+                  }}
+                >
+                  ✓ Simpan{volume ? ` ${volume} ${unit}` : ' Sesi'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   DASHBOARD PAGE ROOT
+   ============================================================ */
+
+export function DashboardPage() {
+  const [timerVisible, setTimerVisible] = useState(false)
+
+  return (
+    <>
+      <DashboardNav />
+      <main style={{ background: T.cream, minHeight: '100vh' }}>
+        <WelcomeSection onStartTimer={() => setTimerVisible(true)} />
+        <StatsRow />
+        <SessionTimeline />
+      </main>
+      <ActiveTimerOverlay
+        visible={timerVisible}
+        onClose={() => setTimerVisible(false)}
+      />
+    </>
+  )
+}
