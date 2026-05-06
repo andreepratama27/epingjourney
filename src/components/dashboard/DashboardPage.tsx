@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 /* ============================================================
    DESIGN TOKENS
@@ -33,39 +33,61 @@ const D = {
 } as const
 
 /* ============================================================
-   MOCK DATA
+   SESSION DATA
    ============================================================ */
 
-const NEXT_SESSION_HOUR = 18
-const NEXT_SESSION_MINUTE = 0
 const INTERVAL_MINUTES = 180 // 3-hour pumping interval
+const SCHEDULE_START_HOUR = 6
+const TOTAL_SESSIONS = 6
 
 type SessionStatus = 'done' | 'overdue' | 'upcoming'
+type PumpSide  = 'kiri' | 'kanan' | 'keduanya'
 
 interface Session {
   id: number
   time: string
   status: SessionStatus
-  volume: string | null
-  duration: string | null
+  volumeAmount: number | null
+  volumeOz: number | null
+  durationMin: number | null
+  unit?: 'oz' | 'ml'
+  side?: PumpSide
+  startTime?: string
+  endTime?: string
   overdueMin?: number
 }
 
-const SESSIONS: Session[] = [
-  { id: 1, time: '06:00', status: 'done',     volume: '3,2 oz', duration: '18 mnt' },
-  { id: 2, time: '09:00', status: 'done',     volume: '3,5 oz', duration: '20 mnt' },
-  { id: 3, time: '12:00', status: 'done',     volume: '4,1 oz', duration: '22 mnt' },
-  { id: 4, time: '15:00', status: 'overdue',  volume: null,     duration: null, overdueMin: 14 },
-  { id: 5, time: '18:00', status: 'upcoming', volume: null,     duration: null },
-  { id: 6, time: '21:00', status: 'upcoming', volume: null,     duration: null },
-]
+interface PumpLog {
+  id: number
+  time: string
+  volumeAmount: number | null
+  volumeOz: number | null
+  durationMin: number
+  unit: 'oz' | 'ml'
+  side: PumpSide
+  startTime: string
+  endTime: string
+}
 
-const TOTAL_OZ = 10.8   // 3.2 + 3.5 + 4.1
+interface DashboardSummary {
+  totalOz: number
+  targetOz: number
+  sessionsDone: number
+  totalSessions: number
+  avgDurationMin: number
+  streakDays: number
+}
+
+interface TimerSessionResult {
+  startedAt: Date
+  endedAt: Date
+  elapsedSec: number
+  side: PumpSide
+  volume: string
+  unit: 'oz' | 'ml'
+}
+
 const TARGET_OZ = 30
-const SESSIONS_DONE = 3
-const TOTAL_SESSIONS = 6
-const AVG_DURATION = 20  // minutes
-const STREAK = 7         // days
 
 /* ============================================================
    HOOKS
@@ -130,12 +152,119 @@ function getGreeting(hour: number) {
   return { text: 'Selamat malam', emoji: '🌙' }
 }
 
+function formatClock(date: Date) {
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+function scheduleTimes() {
+  return Array.from({ length: TOTAL_SESSIONS }, (_, index) => {
+    const hour = SCHEDULE_START_HOUR + (INTERVAL_MINUTES / 60) * index
+    return `${String(hour).padStart(2, '0')}:00`
+  })
+}
+
+function scheduleDate(time: string, base = new Date()) {
+  const [hour, minute] = time.split(':').map(Number)
+  const date = new Date(base)
+  date.setHours(hour, minute, 0, 0)
+  return date
+}
+
+function formatOz(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
+function formatSessionOz(value: number) {
+  return formatOz(value).replace('.', ',')
+}
+
+function formatSessionVolume(session: Session) {
+  if (session.volumeAmount === null) return 'Belum ada hasil'
+  const unit = session.unit ?? 'oz'
+  const value = unit === 'oz'
+    ? formatSessionOz(session.volumeAmount)
+    : String(Math.round(session.volumeAmount))
+  return `${value} ${unit}`
+}
+
+function volumeToOz(volume: string, unit: 'oz' | 'ml') {
+  const normalized = Number.parseFloat(volume.replace(',', '.'))
+  if (!Number.isFinite(normalized)) return null
+  return unit === 'ml' ? normalized / 29.5735 : normalized
+}
+
+function createSummary(sessions: Session[]): DashboardSummary {
+  const done = sessions.filter((session) => session.status === 'done')
+  const totalOz = done.reduce((sum, session) => sum + (session.volumeOz ?? 0), 0)
+  const durations = done
+    .map((session) => session.durationMin)
+    .filter((duration): duration is number => duration !== null)
+  const avgDurationMin = durations.length
+    ? Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length)
+    : 0
+
+  return {
+    totalOz: Math.round(totalOz * 10) / 10,
+    targetOz: TARGET_OZ,
+    sessionsDone: done.length,
+    totalSessions: sessions.length,
+    avgDurationMin,
+    streakDays: done.length > 0 ? 1 : 0,
+  }
+}
+
+function createSessions(logs: PumpLog[], now: Date): Session[] {
+  return scheduleTimes().map((time, index) => {
+    const log = logs.find((item) => item.time === time)
+    if (log) {
+      return {
+        id: index + 1,
+        time,
+        status: 'done',
+        volumeAmount: log.volumeAmount,
+        volumeOz: log.volumeOz,
+        durationMin: log.durationMin,
+        unit: log.unit,
+        side: log.side,
+        startTime: log.startTime,
+        endTime: log.endTime,
+      }
+    }
+
+    const scheduledAt = scheduleDate(time, now)
+    const overdueMin = Math.floor((now.getTime() - scheduledAt.getTime()) / 60_000)
+    if (overdueMin > 0) {
+      return {
+        id: index + 1,
+        time,
+        status: 'overdue',
+        volumeAmount: null,
+        volumeOz: null,
+        durationMin: null,
+        overdueMin,
+      }
+    }
+
+    return {
+      id: index + 1,
+      time,
+      status: 'upcoming',
+      volumeAmount: null,
+      volumeOz: null,
+      durationMin: null,
+    }
+  })
+}
+
+function nextActionableSession(sessions: Session[]) {
+  return sessions.find((session) => session.status !== 'done') ?? sessions[sessions.length - 1]
+}
+
 /* ============================================================
    TIMER — TYPES & HELPERS
    ============================================================ */
 
 type TimerPhase = 'running' | 'paused' | 'logging'
-type PumpSide  = 'kiri' | 'kanan' | 'keduanya'
 
 const SESSION_TARGET_SEC = 20 * 60  // 20-min expected session
 
@@ -256,7 +385,7 @@ function DashboardNav() {
               color: T.softInk,
             }}
           >
-            Maya
+            Bunda
           </span>
         </div>
       </div>
@@ -272,11 +401,13 @@ function CountdownRing({
   minutesLeft,
   totalMinutes,
   display,
+  label,
   visible,
 }: {
   minutesLeft: number
   totalMinutes: number
   display: string
+  label: string
   visible: boolean
 }) {
   const SIZE = 156
@@ -371,7 +502,7 @@ function CountdownRing({
             textTransform: 'uppercase',
           }}
         >
-          menuju 18:00
+          menuju {label}
         </span>
       </div>
     </div>
@@ -382,10 +513,19 @@ function CountdownRing({
    SECTION 1 — WELCOME HEADER
    ============================================================ */
 
-function WelcomeSection({ onStartTimer }: { onStartTimer: () => void }) {
+function WelcomeSection({
+  sessions,
+  nextSession,
+  onStartTimer,
+}: {
+  sessions: Session[]
+  nextSession?: Session
+  onStartTimer: () => void
+}) {
   const mounted = useMount()
   const now = useCurrentTime()
-  const { display, minutesLeft } = useCountdown(NEXT_SESSION_HOUR, NEXT_SESSION_MINUTE)
+  const [nextHour = SCHEDULE_START_HOUR, nextMinute = 0] = (nextSession?.time ?? '06:00').split(':').map(Number)
+  const { display, minutesLeft } = useCountdown(nextHour, nextMinute)
 
   const greeting = now ? getGreeting(now.getHours()) : { text: 'Halo', emoji: '👋' }
 
@@ -402,7 +542,7 @@ function WelcomeSection({ onStartTimer }: { onStartTimer: () => void }) {
   const [secondaryHover, setSecondaryHover] = useState(false)
 
   // Overdue session
-  const overdueSession = SESSIONS.find((s) => s.status === 'overdue')
+  const overdueSession = sessions.find((s) => s.status === 'overdue')
 
   return (
     <section
@@ -481,7 +621,7 @@ function WelcomeSection({ onStartTimer }: { onStartTimer: () => void }) {
                 marginBottom: 6,
               }}
             >
-              Maya! 👋
+              Bunda! 👋
             </h1>
 
             <p
@@ -532,7 +672,7 @@ function WelcomeSection({ onStartTimer }: { onStartTimer: () => void }) {
                     lineHeight: 1,
                   }}
                 >
-                  18:00
+                  {nextSession?.time ?? '06:00'}
                 </span>
                 <span
                   style={{
@@ -554,6 +694,7 @@ function WelcomeSection({ onStartTimer }: { onStartTimer: () => void }) {
               minutesLeft={minutesLeft}
               totalMinutes={INTERVAL_MINUTES}
               display={display}
+              label={nextSession?.time ?? '06:00'}
               visible={mounted}
             />
           </div>
@@ -821,33 +962,33 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
   )
 }
 
-function StatsRow() {
+function StatsRow({ summary }: { summary: DashboardSummary }) {
   const visible = useMount()
 
   const cards: StatCardProps[] = [
     {
       emoji: '🥛',
-      value: `${TOTAL_OZ} oz`,
+      value: `${formatOz(summary.totalOz)} oz`,
       label: 'Total Output',
-      sub: `Target: ${TARGET_OZ} oz`,
-      progress: TOTAL_OZ / TARGET_OZ,
+      sub: `Target: ${summary.targetOz} oz`,
+      progress: summary.totalOz / summary.targetOz,
       progressColor: T.sage,
       visible,
       delay: 0,
     },
     {
       emoji: '✅',
-      value: `${SESSIONS_DONE} / ${TOTAL_SESSIONS}`,
+      value: `${summary.sessionsDone} / ${summary.totalSessions}`,
       label: 'Sesi Selesai',
-      sub: `${TOTAL_SESSIONS - SESSIONS_DONE} sesi tersisa`,
-      progress: SESSIONS_DONE / TOTAL_SESSIONS,
+      sub: `${summary.totalSessions - summary.sessionsDone} sesi tersisa`,
+      progress: summary.sessionsDone / summary.totalSessions,
       progressColor: T.rose,
       visible,
       delay: 80,
     },
     {
       emoji: '⏱️',
-      value: `${AVG_DURATION} mnt`,
+      value: `${summary.avgDurationMin} mnt`,
       label: 'Rata-rata',
       sub: 'Durasi per sesi',
       visible,
@@ -855,7 +996,7 @@ function StatsRow() {
     },
     {
       emoji: '🔥',
-      value: `${STREAK} hari`,
+      value: `${summary.streakDays} hari`,
       label: 'Streak',
       sub: 'Terus semangat, Bunda!',
       visible,
@@ -1010,7 +1151,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
                 color: T.ink,
               }}
             >
-              {session.volume}
+              {formatSessionVolume(session)}
             </span>
             <span
               style={{
@@ -1019,7 +1160,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
                 color: T.muted,
               }}
             >
-              · {session.duration}
+              · {session.durationMin ?? 0} mnt
             </span>
           </div>
         )}
@@ -1107,13 +1248,14 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
   )
 }
 
-function SessionTimeline() {
+function SessionTimeline({ sessions }: { sessions: Session[] }) {
   const visible = useMount()
   const [geserHover, setGeserHover] = useState(false)
 
-  const doneSessions = SESSIONS.filter((s) => s.status === 'done').length
-  const overdueSessions = SESSIONS.filter((s) => s.status === 'overdue').length
-  const upcomingSessions = SESSIONS.filter((s) => s.status === 'upcoming').length
+  const doneSessions = sessions.filter((s) => s.status === 'done').length
+  const overdueSessions = sessions.filter((s) => s.status === 'overdue').length
+  const upcomingSessions = sessions.filter((s) => s.status === 'upcoming').length
+  const lastSession = sessions[sessions.length - 1]
 
   const legend = [
     { label: `${doneSessions} selesai`, color: T.sageDeep },
@@ -1178,7 +1320,7 @@ function SessionTimeline() {
                   color: T.ink,
                 }}
               >
-                {SESSIONS.length} Sesi Hari Ini
+                {sessions.length} Sesi Hari Ini
               </span>
             </div>
 
@@ -1205,11 +1347,11 @@ function SessionTimeline() {
 
           {/* Session rows */}
           <div style={{ padding: '6px 20px 6px' }}>
-            {SESSIONS.map((session, i) => (
+            {sessions.map((session, i) => (
               <SessionRow
                 key={session.id}
                 session={session}
-                isLast={i === SESSIONS.length - 1}
+                isLast={i === sessions.length - 1}
               />
             ))}
           </div>
@@ -1234,7 +1376,7 @@ function SessionTimeline() {
                 color: T.muted,
               }}
             >
-              Interval tiap 3 jam · Sesi terakhir 21:00
+              Interval tiap 3 jam · Sesi terakhir {lastSession?.time ?? '-'}
             </p>
 
             <button
@@ -1347,11 +1489,15 @@ function TimerRing({ elapsed, visible }: { elapsed: number; visible: boolean }) 
    ============================================================ */
 
 function ActiveTimerOverlay({
+  completedCount,
   visible,
   onClose,
+  onSave,
 }: {
+  completedCount: number
   visible: boolean
   onClose: () => void
+  onSave: (result: TimerSessionResult) => void
 }) {
   const [show,             setShow]             = useState(false)
   const [phase,            setPhase]            = useState<TimerPhase>('running')
@@ -1386,7 +1532,18 @@ function ActiveTimerOverlay({
   const togglePause = () =>
     setPhase(p => (p === 'running' ? 'paused' : 'running'))
   const handleStop    = () => setPhase('logging')
-  const handleSave    = () => onClose()
+  const handleSave    = () => {
+    if (!sessionStartTime) return onClose()
+    onSave({
+      startedAt: sessionStartTime,
+      endedAt: new Date(),
+      elapsedSec: elapsed,
+      side,
+      volume,
+      unit,
+    })
+    onClose()
+  }
   const handleSkipLog = () => onClose()
 
   const startedAtStr = sessionStartTime
@@ -1477,7 +1634,7 @@ function ActiveTimerOverlay({
             fontFamily: 'Nunito Sans, sans-serif',
             fontSize: 13, color: D.muted, textAlign: 'center',
           }}>
-            Dimulai {startedAtStr} · Sesi ke-{SESSIONS_DONE + 1} hari ini
+            Dimulai {startedAtStr} · Sesi ke-{completedCount + 1} hari ini
           </p>
         </div>
 
@@ -1660,18 +1817,52 @@ function ActiveTimerOverlay({
 
 export function DashboardPage() {
   const [timerVisible, setTimerVisible] = useState(false)
+  const now = useCurrentTime()
+  const [logs, setLogs] = useState<PumpLog[]>([])
+  const sessions = useMemo(() => createSessions(logs, now ?? new Date()), [logs, now])
+  const summary = useMemo(() => createSummary(sessions), [sessions])
+  const nextSession = nextActionableSession(sessions)
+
+  const handleSaveTimerSession = (result: TimerSessionResult) => {
+    const parsedVolume = Number.parseFloat(result.volume.replace(',', '.'))
+    const volumeOz = volumeToOz(result.volume, result.unit)
+    const durationMin = Math.max(1, Math.round(result.elapsedSec / 60))
+    const scheduledTime = nextSession?.time ?? formatClock(result.startedAt)
+    const completedLog: PumpLog = {
+      id: Date.now(),
+      time: scheduledTime,
+      volumeAmount: Number.isFinite(parsedVolume) ? parsedVolume : null,
+      volumeOz,
+      durationMin,
+      unit: result.unit,
+      side: result.side,
+      startTime: result.startedAt.toISOString(),
+      endTime: result.endedAt.toISOString(),
+    }
+
+    setLogs((current) => [
+      ...current.filter((log) => log.time !== scheduledTime),
+      completedLog,
+    ])
+  }
 
   return (
     <>
       <DashboardNav />
       <main style={{ background: T.cream, minHeight: '100vh' }}>
-        <WelcomeSection onStartTimer={() => setTimerVisible(true)} />
-        <StatsRow />
-        <SessionTimeline />
+        <WelcomeSection
+          sessions={sessions}
+          nextSession={nextSession}
+          onStartTimer={() => setTimerVisible(true)}
+        />
+        <StatsRow summary={summary} />
+        <SessionTimeline sessions={sessions} />
       </main>
       <ActiveTimerOverlay
+        completedCount={summary.sessionsDone}
         visible={timerVisible}
         onClose={() => setTimerVisible(false)}
+        onSave={handleSaveTimerSession}
       />
     </>
   )

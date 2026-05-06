@@ -8,3 +8,12 @@ This project use COSS UI (https://coss.com/ui/llms.txt) as the main component. W
 ```
 npx shadcn@latest add @coss/<component_name>
 ```
+
+
+## Task Tracking
+
+This project uses `bd` (Beads) for issue tracking.
+- Run `bd prime` for workflow context.
+- Run `bd ready --json` before starting work.
+- Use `bd create`, `bd show <id>`, `bd update <id> --status in_progress`, `bd close <id> --reason "Done"`.
+- Do not use markdown TODO/task lists.
