@@ -317,6 +317,30 @@ body {
 }
 
 /* EpingJourney Landing — Mobile responsive overrides */
+.ep-summary-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.ep-summary-card-featured {
+  grid-column: span 2;
+}
+
+@media (max-width: 860px) {
+  .ep-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ep-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ep-summary-card-featured {
+    grid-column: span 1;
+  }
+}
+
 @media (max-width: 768px) {
   /* Hide desktop nav links/buttons on mobile */
   .ep-navbar-links {

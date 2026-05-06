@@ -854,28 +854,48 @@ interface StatCardProps {
   sub: string
   progress?: number
   progressColor?: string
+  accentColor?: string
+  featured?: boolean
   visible: boolean
   delay: number
 }
 
-function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, visible, delay }: StatCardProps) {
+function StatCard({
+  emoji,
+  value,
+  label,
+  sub,
+  progress,
+  progressColor = T.sage,
+  accentColor = T.sageDeep,
+  featured = false,
+  visible,
+  delay,
+}: StatCardProps) {
   const [hovered, setHovered] = useState(false)
+  const progressValue = progress === undefined ? undefined : Math.max(0, Math.min(1, progress))
 
   return (
     <div
+      role="group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: T.warmWhite,
-        border: `1px solid ${T.hairline}`,
-        borderRadius: 20,
-        padding: '20px 22px 18px',
-        boxShadow: hovered ? '0 10px 28px rgba(45,42,38,0.09)' : '0 2px 10px rgba(45,42,38,0.04)',
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        background: featured
+          ? `linear-gradient(145deg, ${T.warmWhite} 0%, ${T.sand} 100%)`
+          : 'rgba(255,253,249,0.72)',
+        border: `1px solid ${featured ? 'rgba(232,180,184,0.42)' : T.hairline}`,
+        borderRadius: 18,
+        padding: featured ? '24px 26px 22px' : '17px 18px',
+        boxShadow: hovered ? '0 14px 32px rgba(45,42,38,0.1)' : '0 1px 0 rgba(45,42,38,0.03)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'box-shadow 250ms ease, transform 250ms ease',
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
+        justifyContent: 'space-between',
+        gap: featured ? 18 : 12,
+        width: '100%',
+        height: '100%',
         opacity: visible ? 1 : 0,
         // opacity transition uses the stagger delay
         // we keep it separate from the hover transitions above by not using 'all'
@@ -885,7 +905,22 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
     >
       {/* Top row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 22 }}>{emoji}</span>
+        <span
+          style={{
+            width: featured ? 42 : 34,
+            height: featured ? 42 : 34,
+            borderRadius: featured ? 14 : 12,
+            background: `${accentColor}18`,
+            border: `1px solid ${accentColor}2E`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: featured ? 23 : 18,
+            flexShrink: 0,
+          }}
+        >
+          {emoji}
+        </span>
         <span
           style={{
             fontFamily: 'Nunito Sans, sans-serif',
@@ -904,12 +939,14 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
       <div>
         <p
           style={{
-            fontFamily: 'Kalam, cursive',
-            fontWeight: 700,
-            fontSize: 'clamp(22px, 3vw, 30px)',
+            fontFamily: 'Nunito Sans, sans-serif',
+            fontWeight: 800,
+            fontSize: featured ? 'clamp(34px, 5vw, 50px)' : 'clamp(22px, 3vw, 29px)',
             color: T.ink,
-            lineHeight: 1.1,
-            marginBottom: 3,
+            lineHeight: featured ? 0.98 : 1.05,
+            marginBottom: featured ? 8 : 4,
+            fontVariantNumeric: 'tabular-nums',
+            whiteSpace: 'nowrap',
           }}
         >
           {value}
@@ -917,7 +954,8 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
         <p
           style={{
             fontFamily: 'Nunito Sans, sans-serif',
-            fontSize: 12,
+            fontSize: featured ? 13 : 12,
+            fontWeight: featured ? 700 : 400,
             color: T.muted,
           }}
         >
@@ -930,9 +968,9 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
         <div>
           <div
             style={{
-              height: 5,
+              height: featured ? 8 : 6,
               background: T.oat,
-              borderRadius: 3,
+              borderRadius: 100,
               overflow: 'hidden',
             }}
           >
@@ -940,8 +978,8 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
               style={{
                 height: '100%',
                 background: `linear-gradient(90deg, ${progressColor}, ${progressColor}cc)`,
-                borderRadius: 3,
-                width: visible ? `${Math.round(progress * 100)}%` : '0%',
+                borderRadius: 100,
+                width: visible ? `${Math.round((progressValue ?? 0) * 100)}%` : '0%',
                 transition: `width 1.2s cubic-bezier(0.4, 0, 0.2, 1) ${delay + 300}ms`,
               }}
             />
@@ -951,10 +989,10 @@ function StatCard({ emoji, value, label, sub, progress, progressColor = T.sage, 
               fontFamily: 'Nunito Sans, sans-serif',
               fontSize: 11,
               color: T.muted,
-              marginTop: 4,
+              marginTop: 6,
             }}
           >
-            {Math.round(progress * 100)}% dari target
+            {Math.round((progressValue ?? 0) * 100)}% dari target
           </p>
         </div>
       )}
@@ -973,6 +1011,8 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
       sub: `Target: ${summary.targetOz} oz`,
       progress: summary.totalOz / summary.targetOz,
       progressColor: T.sage,
+      accentColor: T.sageDeep,
+      featured: true,
       visible,
       delay: 0,
     },
@@ -983,6 +1023,7 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
       sub: `${summary.totalSessions - summary.sessionsDone} sesi tersisa`,
       progress: summary.sessionsDone / summary.totalSessions,
       progressColor: T.rose,
+      accentColor: T.roseDeep,
       visible,
       delay: 80,
     },
@@ -991,6 +1032,7 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
       value: `${summary.avgDurationMin} mnt`,
       label: 'Rata-rata',
       sub: 'Durasi per sesi',
+      accentColor: T.amber,
       visible,
       delay: 160,
     },
@@ -999,10 +1041,12 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
       value: `${summary.streakDays} hari`,
       label: 'Streak',
       sub: 'Terus semangat, Bunda!',
+      accentColor: T.sky,
       visible,
       delay: 240,
     },
   ]
+  const remainingOz = Math.max(0, summary.targetOz - summary.totalOz)
 
   return (
     <section
@@ -1011,36 +1055,73 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
         padding: '0 24px 28px',
       }}
     >
-      <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <p
-          style={{
-            fontFamily: 'Nunito Sans, sans-serif',
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: 2,
-            textTransform: 'uppercase',
-            color: T.muted,
-            marginBottom: 14,
-          }}
-        >
-          Ringkasan Hari Ini
-        </p>
-
+      <div
+        style={{
+          maxWidth: 960,
+          margin: '0 auto',
+          background: 'rgba(255,253,249,0.62)',
+          border: `1px solid ${T.hairline}`,
+          borderRadius: 24,
+          padding: '18px',
+          boxShadow: '0 18px 42px rgba(45,42,38,0.06)',
+        }}
+      >
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
             gap: 14,
+            marginBottom: 14,
+            flexWrap: 'wrap',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              color: T.muted,
+            }}
+          >
+            Ringkasan Hari Ini
+          </p>
+          <span
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 12,
+              fontWeight: 700,
+              color: T.sageDeep,
+              background: 'rgba(107,142,104,0.1)',
+              border: '1px solid rgba(107,142,104,0.16)',
+              borderRadius: 999,
+              padding: '5px 10px',
+            }}
+          >
+            {formatOz(remainingOz)} oz lagi
+          </span>
+        </div>
+
+        <div
+          className="ep-summary-grid"
+          style={{
+            display: 'grid',
+            gap: 12,
           }}
         >
           {cards.map((card) => (
             /* stagger wrapper */
             <div
               key={card.label}
+              className={card.featured ? 'ep-summary-card-featured' : undefined}
               style={{
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateY(0)' : 'translateY(14px)',
                 transition: `opacity 0.5s ease ${card.delay}ms, transform 0.5s ease ${card.delay}ms`,
+                display: 'flex',
+                height: '100%',
               }}
             >
               <StatCard {...card} />
