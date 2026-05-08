@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EpingJourney Color Scheme Preview</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #f6f9fc;
+        --ink: #172033;
+        --muted: #667085;
+        --line: #d8e0ea;
+        --card: #ffffff;
+        --shadow: 0 24px 70px rgba(18, 33, 59, 0.12);
+        --radius: 18px;
+        --primary-contrast: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top left, rgba(80, 144, 211, 0.18), transparent 34rem),
+          linear-gradient(180deg, #f8fbff 0%, var(--page) 100%);
+        color: var(--ink);
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        transition:
+          background 180ms ease,
+          color 180ms ease;
+      }
+
+      body.dark-mode {
+        color-scheme: dark;
+        --page: #111722;
+        --ink: #f6f2ea;
+        --muted: rgba(246, 242, 234, 0.62);
+        --line: rgba(246, 242, 234, 0.14);
+        --card: #172030;
+        --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+        background:
+          radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 24%, transparent), transparent 34rem),
+          linear-gradient(180deg, #111722 0%, #0c1119 100%);
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 42px 0 56px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 4vw, 56px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 560px;
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      .note {
+        flex: 0 0 auto;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--card) 82%, transparent);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      .mode-toggle {
+        display: inline-grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--card) 82%, transparent);
+      }
+
+      .mode-button {
+        border: 0;
+        border-radius: 999px;
+        padding: 9px 14px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .mode-button.active {
+        background: var(--primary);
+        color: var(--primary-contrast);
+      }
+
+      .schemes {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        flex: 1;
+      }
+
+      .scheme-tab {
+        appearance: none;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        background: color-mix(in srgb, var(--card) 82%, transparent);
+        cursor: pointer;
+        text-align: left;
+        transition:
+          transform 160ms ease,
+          border-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      .scheme-tab:hover,
+      .scheme-tab.active {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        box-shadow: 0 12px 32px rgba(31, 88, 158, 0.14);
+      }
+
+      .tab-name {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .chips {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+      }
+
+      .chip {
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+
+      .stage {
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 28px;
+        padding: 30px;
+        background:
+          radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--sky) 32%, transparent), transparent 22rem),
+          linear-gradient(135deg, var(--cream), var(--warm-white));
+      }
+
+      .panel {
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--warm-white) 88%, transparent);
+      }
+
+      .copy {
+        padding: 28px;
+        min-height: 360px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        gap: 8px;
+        align-items: center;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--primary) 16%, var(--warm-white));
+        color: var(--primary-deep);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .copy h2 {
+        max-width: 470px;
+        margin: 20px 0 14px;
+        color: var(--ink);
+        font-size: clamp(34px, 5vw, 66px);
+        line-height: 0.94;
+        letter-spacing: 0;
+      }
+
+      .copy p {
+        max-width: 520px;
+        margin: 0;
+        color: var(--soft-ink);
+        font-size: 17px;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+      }
+
+      .button {
+        border: 0;
+        border-radius: 14px;
+        padding: 14px 18px;
+        font-weight: 800;
+      }
+
+      .primary {
+        background: var(--primary);
+        color: var(--primary-contrast, white);
+        box-shadow: 0 14px 32px color-mix(in srgb, var(--primary) 34%, transparent);
+      }
+
+      .secondary {
+        border: 1px solid var(--hairline);
+        background: var(--warm-white);
+        color: var(--primary-deep);
+      }
+
+      .phone {
+        padding: 16px;
+        border-radius: 34px;
+        background: var(--oat);
+        box-shadow: inset 0 0 0 1px var(--hairline);
+      }
+
+      .screen {
+        min-height: 460px;
+        border-radius: 26px;
+        padding: 20px;
+        background: var(--cream);
+        overflow: hidden;
+      }
+
+      .topbar,
+      .stats,
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--success), var(--success-deep));
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .strong {
+        color: var(--ink);
+        font-size: 20px;
+        font-weight: 850;
+      }
+
+      .timer {
+        margin: 22px 0;
+        padding: 22px;
+        border-radius: 22px;
+        background: linear-gradient(145deg, var(--warm-white), var(--sand));
+        border: 1px solid var(--hairline);
+      }
+
+      .timer .time {
+        margin: 8px 0;
+        color: var(--primary-deep);
+        font-size: 44px;
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .progress {
+        height: 10px;
+        border-radius: 999px;
+        background: var(--oat);
+        overflow: hidden;
+      }
+
+      .progress span {
+        display: block;
+        width: 68%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--primary), var(--primary-deep));
+      }
+
+      .stats {
+        align-items: stretch;
+      }
+
+      .stat,
+      .session {
+        padding: 14px;
+        border: 1px solid var(--hairline);
+        border-radius: 16px;
+        background: var(--warm-white);
+      }
+
+      .stat {
+        flex: 1;
+      }
+
+      .session {
+        margin-top: 10px;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 5px 8px;
+        background: color-mix(in srgb, var(--warning) 15%, var(--warm-white));
+        color: var(--warning-deep);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .palette-detail {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        padding: 18px 30px 30px;
+        background: var(--warm-white);
+      }
+
+      .swatch {
+        border: 1px solid var(--hairline);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--warm-white);
+      }
+
+      .swatch-color {
+        height: 72px;
+      }
+
+      .swatch-text {
+        padding: 10px;
+      }
+
+      .swatch-text b {
+        display: block;
+        color: var(--ink);
+        font-size: 12px;
+      }
+
+      .swatch-text code {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 960px) {
+        header,
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          display: block;
+        }
+
+        .note {
+          display: inline-flex;
+          margin-top: 18px;
+        }
+
+        .toolbar,
+        .schemes,
+        .palette-detail {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .toolbar {
+          display: grid;
+        }
+      }
+
+      @media (max-width: 560px) {
+        main {
+          width: min(100% - 20px, 1180px);
+          padding-top: 24px;
+        }
+
+        .hero {
+          padding: 12px;
+        }
+
+        .copy {
+          padding: 20px;
+        }
+
+        .schemes,
+        .palette-detail {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Palette options</h1>
+          <p class="lede">
+            Click a palette. Preview maps current EpingJourney tokens: rose becomes primary action,
+            sage stays supportive, amber keeps warning.
+          </p>
+        </div>
+        <div class="note">Choose name + send it back</div>
+      </header>
+
+      <div class="toolbar">
+        <nav class="schemes" aria-label="Color schemes"></nav>
+        <div class="mode-toggle" aria-label="Preview mode">
+          <button class="mode-button active" type="button" data-mode="light">Light</button>
+          <button class="mode-button" type="button" data-mode="dark">Dark</button>
+        </div>
+      </div>
+
+      <section class="stage" aria-live="polite">
+        <div class="hero">
+          <article class="panel copy">
+            <div>
+              <span class="eyebrow">EpingJourney</span>
+              <h2>Track pumping gently, without losing the day.</h2>
+              <p>
+                A calmer interface for timers, schedule states, and milk output logs.
+                Designed to keep urgency visible without making the app feel clinical.
+              </p>
+              <div class="actions">
+                <button class="button primary" type="button">Mulai Timer</button>
+                <button class="button secondary" type="button">Catat Manual</button>
+              </div>
+            </div>
+            <div class="small" id="scheme-note"></div>
+          </article>
+
+          <aside class="phone" aria-label="Dashboard preview">
+            <div class="screen">
+              <div class="topbar">
+                <div>
+                  <div class="small">Selamat pagi</div>
+                  <div class="strong">Mama</div>
+                </div>
+                <div class="avatar"></div>
+              </div>
+
+              <div class="timer">
+                <div class="small">Sesi berikutnya</div>
+                <div class="time">02:14</div>
+                <div class="progress"><span></span></div>
+              </div>
+
+              <div class="stats">
+                <div class="stat">
+                  <div class="small">Hari ini</div>
+                  <div class="strong">18 oz</div>
+                </div>
+                <div class="stat">
+                  <div class="small">Selesai</div>
+                  <div class="strong">4/6</div>
+                </div>
+              </div>
+
+              <div class="session row">
+                <div>
+                  <div class="strong">15:00</div>
+                  <div class="small">Sesi pumping</div>
+                </div>
+                <span class="badge">Terlewat 12m</span>
+              </div>
+              <div class="session row">
+                <div>
+                  <div class="strong">18:00</div>
+                  <div class="small">Akan datang</div>
+                </div>
+                <span class="small">3 jam lagi</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="palette-detail"></div>
+      </section>
+    </main>
+
+    <script>
+      const schemes = [
+        {
+          name: "Bluebell Care",
+          note: "Soft, maternal, closest to current warm feel.",
+          colors: {
+            cream: "#F5F9FF",
+            warmWhite: "#FFFFFF",
+            sand: "#EAF2FB",
+            primary: "#8FBCEB",
+            primaryDeep: "#2F75B8",
+            success: "#9CC8B7",
+            successDeep: "#477E70",
+            oat: "#DDEAF7",
+            warning: "#E5AA6D",
+            warningDeep: "#A96521",
+            sky: "#B8D8F2",
+            ink: "#1B2A3D",
+            softInk: "#52657C",
+            muted: "#7A8A9D",
+            hairline: "#D8E5F2",
+          },
+        },
+        {
+          name: "Nautical Calm",
+          note: "More confident, crisp, suitable for dashboard-heavy usage.",
+          colors: {
+            cream: "#F3F7FA",
+            warmWhite: "#FFFFFF",
+            sand: "#E7EEF4",
+            primary: "#5A9BD8",
+            primaryDeep: "#0F5794",
+            success: "#83B9AE",
+            successDeep: "#2D776B",
+            oat: "#D6E2EC",
+            warning: "#D79B57",
+            warningDeep: "#935714",
+            sky: "#9DCAE8",
+            ink: "#14273A",
+            softInk: "#4D6174",
+            muted: "#7B8B9A",
+            hairline: "#D2DEE8",
+          },
+        },
+        {
+          name: "Morning Harbor",
+          note: "Fresh teal-blue mix with a warm safety accent.",
+          colors: {
+            cream: "#F2FAFC",
+            warmWhite: "#FFFFFF",
+            sand: "#E3F1F5",
+            primary: "#70B7D6",
+            primaryDeep: "#1A789E",
+            success: "#9BC7A8",
+            successDeep: "#4B8660",
+            oat: "#D5EAF0",
+            warning: "#E6B15E",
+            warningDeep: "#9B6416",
+            sky: "#A7D8E8",
+            ink: "#15303B",
+            softInk: "#4E6A75",
+            muted: "#78929B",
+            hairline: "#CCE4EA",
+          },
+        },
+        {
+          name: "Deep Lullaby",
+          note: "Premium dark-blue contrast while still gentle.",
+          colors: {
+            cream: "#F4F7FF",
+            warmWhite: "#FFFFFF",
+            sand: "#E8EEF9",
+            primary: "#6D8FE8",
+            primaryDeep: "#2746A5",
+            success: "#91B7C6",
+            successDeep: "#3A7284",
+            oat: "#DCE4F4",
+            warning: "#DFA56B",
+            warningDeep: "#9B5C22",
+            sky: "#AEC7F4",
+            ink: "#18223D",
+            softInk: "#56627B",
+            muted: "#838DA1",
+            hairline: "#D6DEEF",
+          },
+        },
+        {
+          name: "Powder Clinic",
+          note: "Cleanest and most clinical; highest perceived trust.",
+          colors: {
+            cream: "#F7FAFD",
+            warmWhite: "#FFFFFF",
+            sand: "#EEF4F8",
+            primary: "#7DAED3",
+            primaryDeep: "#236A9C",
+            success: "#8FC5BD",
+            successDeep: "#397D76",
+            oat: "#E0EAF1",
+            warning: "#D8A15D",
+            warningDeep: "#905B19",
+            sky: "#B9D5E8",
+            ink: "#172635",
+            softInk: "#526271",
+            muted: "#7D8B97",
+            hairline: "#DCE5EC",
+          },
+        },
+        {
+          name: "Meadow Milk",
+          note: "Green-led, calm, natural, best if app should feel restorative.",
+          colors: {
+            cream: "#F7FBF4",
+            warmWhite: "#FFFFFF",
+            sand: "#EAF3E5",
+            primary: "#8FCF9B",
+            primaryDeep: "#348A49",
+            success: "#A9D7B0",
+            successDeep: "#4F8F5D",
+            oat: "#DDEBD6",
+            warning: "#E2B75F",
+            warningDeep: "#986910",
+            sky: "#B8DCCE",
+            ink: "#1E3325",
+            softInk: "#546C5A",
+            muted: "#829080",
+            hairline: "#D7E6CF",
+          },
+        },
+        {
+          name: "Lemon Balm",
+          note: "Yellow-green, brighter, optimistic without becoming childish.",
+          colors: {
+            cream: "#FFFBEA",
+            warmWhite: "#FFFFFF",
+            sand: "#F4EFCB",
+            primary: "#D9C34A",
+            primaryDeep: "#8A7613",
+            success: "#9BCB7A",
+            successDeep: "#4F842E",
+            oat: "#EAE4B8",
+            warning: "#E7A63F",
+            warningDeep: "#995D09",
+            sky: "#BFD9C7",
+            ink: "#332D14",
+            softInk: "#6E663C",
+            muted: "#938A60",
+            hairline: "#E6DFAF",
+          },
+        },
+        {
+          name: "Blush Nursery",
+          note: "Pink-led, warmest, closest to motherhood/wellness brand cues.",
+          colors: {
+            cream: "#FFF6F8",
+            warmWhite: "#FFFFFF",
+            sand: "#F8E8ED",
+            primary: "#E9A5B7",
+            primaryDeep: "#B94E6B",
+            success: "#A8CFA9",
+            successDeep: "#5E8B5F",
+            oat: "#F0DDE4",
+            warning: "#E6AC65",
+            warningDeep: "#A36618",
+            sky: "#C8D9EC",
+            ink: "#3B202B",
+            softInk: "#765664",
+            muted: "#9A7E88",
+            hairline: "#EED7DF",
+          },
+        },
+        {
+          name: "Garden Sorbet",
+          note: "Balanced green, yellow, and pink; most playful option.",
+          colors: {
+            cream: "#FCFAF1",
+            warmWhite: "#FFFFFF",
+            sand: "#F2ECD5",
+            primary: "#F0A6B2",
+            primaryDeep: "#B95063",
+            success: "#8FCB8A",
+            successDeep: "#4D8A49",
+            oat: "#E9E0C5",
+            warning: "#E8C958",
+            warningDeep: "#8D7411",
+            sky: "#A9D8D3",
+            ink: "#342A21",
+            softInk: "#6F6559",
+            muted: "#938A7B",
+            hairline: "#E7DDC4",
+          },
+        },
+        {
+          name: "Pandan Honey",
+          note: "Southeast Asian warm-green feel with strong yellow accents.",
+          colors: {
+            cream: "#F9F8EA",
+            warmWhite: "#FFFFFF",
+            sand: "#ECEBC9",
+            primary: "#95B95F",
+            primaryDeep: "#536F24",
+            success: "#8FC47E",
+            successDeep: "#4C7D38",
+            oat: "#DFDFB5",
+            warning: "#E9BE4F",
+            warningDeep: "#956B10",
+            sky: "#B7D8CB",
+            ink: "#293019",
+            softInk: "#626B43",
+            muted: "#89906B",
+            hairline: "#DCDDAD",
+          },
+        },
+        {
+          name: "Rose Matcha",
+          note: "Soft pink primary with matcha support; refined and less clinical.",
+          colors: {
+            cream: "#FBF8F3",
+            warmWhite: "#FFFFFF",
+            sand: "#EFE8DA",
+            primary: "#D98999",
+            primaryDeep: "#9E4358",
+            success: "#9FBF83",
+            successDeep: "#637F3E",
+            oat: "#E7DCCA",
+            warning: "#DEB45B",
+            warningDeep: "#8B6414",
+            sky: "#B8D2DA",
+            ink: "#332723",
+            softInk: "#6D6157",
+            muted: "#91877B",
+            hairline: "#E4D8CA",
+          },
+        },
+      ]
+
+      const tabs = document.querySelector(".schemes")
+      const detail = document.querySelector(".palette-detail")
+      const note = document.querySelector("#scheme-note")
+      const modeButtons = document.querySelectorAll(".mode-button")
+      let active = 0
+      let mode = "light"
+
+      function darken(hex, amount = 0.28) {
+        const value = hex.replace("#", "")
+        const r = Number.parseInt(value.slice(0, 2), 16)
+        const g = Number.parseInt(value.slice(2, 4), 16)
+        const b = Number.parseInt(value.slice(4, 6), 16)
+        const mix = (channel) => Math.round(channel * amount)
+        return `#${[mix(r), mix(g), mix(b)].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`
+      }
+
+      function lift(hex, amount = 0.78) {
+        const value = hex.replace("#", "")
+        const r = Number.parseInt(value.slice(0, 2), 16)
+        const g = Number.parseInt(value.slice(2, 4), 16)
+        const b = Number.parseInt(value.slice(4, 6), 16)
+        const mix = (channel) => Math.round(channel + (255 - channel) * amount)
+        return `#${[mix(r), mix(g), mix(b)].map((channel) => channel.toString(16).padStart(2, "0")).join("")}`
+      }
+
+      function contrastFor(hex) {
+        const value = hex.replace("#", "")
+        const r = Number.parseInt(value.slice(0, 2), 16)
+        const g = Number.parseInt(value.slice(2, 4), 16)
+        const b = Number.parseInt(value.slice(4, 6), 16)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        return luminance > 0.62 ? "#172033" : "#FFFFFF"
+      }
+
+      function makeDark(colors) {
+        return {
+          cream: darken(colors.ink, 0.48),
+          warmWhite: darken(colors.ink, 0.62),
+          sand: darken(colors.ink, 0.56),
+          primary: colors.primaryDeep,
+          primaryDeep: lift(colors.primary, 0.2),
+          success: colors.successDeep,
+          successDeep: lift(colors.success, 0.12),
+          oat: darken(colors.oat, 0.42),
+          warning: colors.warningDeep,
+          warningDeep: lift(colors.warning, 0.16),
+          sky: darken(colors.sky, 0.62),
+          ink: "#F7F2EA",
+          softInk: "rgba(247, 242, 234, 0.78)",
+          muted: "rgba(247, 242, 234, 0.56)",
+          hairline: "rgba(247, 242, 234, 0.14)",
+        }
+      }
+
+      function tokenName(key) {
+        return key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+      }
+
+      function renderTabs() {
+        tabs.innerHTML = schemes
+          .map(
+            (scheme, index) => {
+              const colors = mode === "dark" ? makeDark(scheme.colors) : scheme.colors
+              return `
+              <button class="scheme-tab ${index === active ? "active" : ""}" type="button" data-index="${index}">
+                <span class="tab-name">${scheme.name}</span>
+                <span class="chips">
+                  ${["cream", "sand", "primary", "primaryDeep", "success"].map((key) => `<span class="chip" style="background:${colors[key]}"></span>`).join("")}
+                </span>
+              </button>
+            `
+            },
+          )
+          .join("")
+      }
+
+      function applyScheme(index) {
+        active = index
+        const scheme = schemes[index]
+        const colors = mode === "dark" ? makeDark(scheme.colors) : scheme.colors
+        const root = document.documentElement
+        document.body.classList.toggle("dark-mode", mode === "dark")
+        for (const [key, value] of Object.entries(colors)) {
+          root.style.setProperty(`--${tokenName(key)}`, value)
+        }
+        root.style.setProperty("--accent", colors.primary)
+        root.style.setProperty("--primary-contrast", mode === "dark" ? "#F7F2EA" : contrastFor(colors.primary))
+        note.textContent = `${scheme.name} (${mode}): ${scheme.note}`
+        detail.innerHTML = Object.entries(colors)
+          .filter(([key]) => ["cream", "warmWhite", "sand", "primary", "primaryDeep", "success", "successDeep", "oat", "warning", "warningDeep"].includes(key))
+          .map(
+            ([key, value]) => `
+              <div class="swatch">
+                <div class="swatch-color" style="background:${value}"></div>
+                <div class="swatch-text">
+                  <b>--ep-${tokenName(key).replace("primary", "rose").replace("success", "sage").replace("warning", "amber")}</b>
+                  <code>${value}</code>
+                </div>
+              </div>
+            `,
+          )
+          .join("")
+        renderTabs()
+      }
+
+      tabs.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-index]")
+        if (!button) return
+        applyScheme(Number(button.dataset.index))
+      })
+
+      modeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          mode = button.dataset.mode
+          modeButtons.forEach((item) => item.classList.toggle("active", item.dataset.mode === mode))
+          applyScheme(active)
+        })
+      })
+
+      applyScheme(0)
+    </script>
+  </body>
+</html>

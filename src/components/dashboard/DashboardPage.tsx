@@ -25,12 +25,12 @@ const T = {
 
 /* ── Dark palette used inside the timer overlay ── */
 const D = {
-  bg: 'linear-gradient(160deg, #1E1B17 0%, #2D2520 55%, #1A1714 100%)',
-  text: '#F5EDE3',
-  muted: 'rgba(245,237,227,0.5)',
-  hairline: 'rgba(245,237,227,0.1)',
-  glass: 'rgba(245,237,227,0.07)',
-  subtle: 'rgba(245,237,227,0.15)',
+  bg: 'linear-gradient(160deg, #0D141D 0%, #111A26 55%, #0A1018 100%)',
+  text: '#F7F2EA',
+  muted: 'rgba(247,242,234,0.56)',
+  hairline: 'rgba(247,242,234,0.14)',
+  glass: 'rgba(247,242,234,0.07)',
+  subtle: 'rgba(247,242,234,0.15)',
 } as const
 
 /* ============================================================
@@ -564,7 +564,7 @@ function WelcomeSection({
           right: '-8%',
           width: '45%',
           height: '160%',
-          background: 'radial-gradient(ellipse, rgba(168,196,162,0.2) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(156,200,183,0.2) 0%, transparent 65%)',
           pointerEvents: 'none',
         }}
       />
@@ -576,7 +576,7 @@ function WelcomeSection({
           left: '-5%',
           width: '35%',
           height: '130%',
-          background: 'radial-gradient(ellipse, rgba(232,180,184,0.14) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(143,188,235,0.14) 0%, transparent 65%)',
           pointerEvents: 'none',
         }}
       />
@@ -729,10 +729,10 @@ function WelcomeSection({
               cursor: 'pointer',
               border: 'none',
               background: primaryHover ? T.roseDeep : T.rose,
-              color: '#FFFDF9',
+              color: '#FFFFFF',
               boxShadow: primaryHover
-                ? '0 8px 24px rgba(201,123,129,0.32)'
-                : '0 4px 14px rgba(232,180,184,0.28)',
+                ? '0 8px 24px rgba(47,117,184,0.32)'
+                : '0 4px 14px rgba(143,188,235,0.28)',
               transition: 'all 200ms ease',
               transform: primaryHover ? 'scale(1.02)' : 'scale(1)',
               display: 'flex',
@@ -815,7 +815,7 @@ function WelcomeSection({
                   cursor: 'pointer',
                   border: 'none',
                   background: T.amber,
-                  color: '#FFFDF9',
+                  color: '#FFFFFF',
                   flexShrink: 0,
                 }}
               >
@@ -885,12 +885,12 @@ function StatCard({
       onMouseLeave={() => setHovered(false)}
       style={{
         background: featured
-          ? `linear-gradient(145deg, ${T.warmWhite} 0%, ${T.sand} 100%)`
-          : 'rgba(255,253,249,0.72)',
-        border: `1px solid ${featured ? 'rgba(232,180,184,0.42)' : T.hairline}`,
+          ? 'var(--ep-summary-card-featured)'
+          : 'var(--ep-summary-card)',
+        border: `1px solid ${featured ? 'rgba(143,188,235,0.42)' : T.hairline}`,
         borderRadius: 18,
         padding: featured ? '24px 26px 22px' : '17px 18px',
-        boxShadow: hovered ? '0 14px 32px rgba(45,42,38,0.1)' : '0 1px 0 rgba(45,42,38,0.03)',
+        boxShadow: hovered ? 'var(--ep-summary-card-shadow-hover)' : 'var(--ep-summary-card-shadow)',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'box-shadow 250ms ease, transform 250ms ease',
         display: 'flex',
@@ -1062,11 +1062,11 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
         style={{
           maxWidth: 960,
           margin: '0 auto',
-          background: 'rgba(255,253,249,0.62)',
+          background: 'var(--ep-summary-shell)',
           border: `1px solid ${T.hairline}`,
           borderRadius: 24,
           padding: '18px',
-          boxShadow: '0 18px 42px rgba(45,42,38,0.06)',
+          boxShadow: 'var(--ep-summary-shadow)',
         }}
       >
         <div
@@ -1097,8 +1097,8 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
               fontSize: 12,
               fontWeight: 700,
               color: T.sageDeep,
-              background: 'rgba(107,142,104,0.1)',
-              border: '1px solid rgba(107,142,104,0.16)',
+              background: 'rgba(71,126,112,0.1)',
+              border: '1px solid rgba(71,126,112,0.16)',
               borderRadius: 999,
               padding: '5px 10px',
             }}
@@ -1143,7 +1143,7 @@ function StatsRow({ summary }: { summary: DashboardSummary }) {
 const STATUS_CFG = {
   done: {
     dot: T.sageDeep,
-    dotBg: 'rgba(107,142,104,0.12)',
+    dotBg: 'rgba(71,126,112,0.12)',
     icon: '✓',
     timeColor: T.ink,
     labelColor: T.softInk,
@@ -1281,7 +1281,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
             fontSize: 11,
             fontWeight: 700,
             color: T.sageDeep,
-            background: 'rgba(107,142,104,0.1)',
+            background: 'rgba(71,126,112,0.1)',
             borderRadius: 20,
             padding: '3px 10px',
             flexShrink: 0,
@@ -1297,7 +1297,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
             fontFamily: 'Nunito Sans, sans-serif',
             fontSize: 12,
             fontWeight: 700,
-            color: '#FFFDF9',
+            color: '#FFFFFF',
             background: T.amber,
             border: 'none',
             borderRadius: 8,
@@ -1317,8 +1317,8 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
             fontSize: 12,
             fontWeight: 700,
             color: T.roseDeep,
-            background: 'rgba(232,180,184,0.15)',
-            border: `1px solid rgba(232,180,184,0.4)`,
+            background: 'rgba(143,188,235,0.15)',
+            border: `1px solid rgba(143,188,235,0.4)`,
             borderRadius: 8,
             padding: '5px 13px',
             cursor: 'pointer',
@@ -1744,7 +1744,7 @@ function ActiveTimerOverlay({
                     flex: 1,
                     fontFamily: 'Nunito Sans, sans-serif',
                     fontSize: 13, fontWeight: 700,
-                    color: active ? '#2D2A26' : D.muted,
+                    color: active ? '#1B2A3D' : D.muted,
                     background: active ? T.rose : D.glass,
                     border: `1px solid ${active ? T.rose : D.hairline}`,
                     borderRadius: 12, padding: '11px 4px',
@@ -1788,11 +1788,11 @@ function ActiveTimerOverlay({
                   flex: 2,
                   fontFamily: 'Nunito Sans, sans-serif',
                   fontSize: 15, fontWeight: 700,
-                  color: '#2D2A26',
+                  color: '#1B2A3D',
                   background: T.rose, border: 'none',
                   borderRadius: 14, padding: '15px 0',
                   cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(232,180,184,0.28)',
+                  boxShadow: '0 6px 20px rgba(143,188,235,0.28)',
                   transition: 'all 200ms ease',
                 }}
               >
@@ -1840,7 +1840,7 @@ function ActiveTimerOverlay({
                       style={{
                         fontFamily: 'Nunito Sans, sans-serif',
                         fontSize: 13, fontWeight: 700,
-                        color: unit === u ? '#2D2A26' : D.muted,
+                        color: unit === u ? '#1B2A3D' : D.muted,
                         background: unit === u ? T.sage : D.glass,
                         border: `1px solid ${unit === u ? T.sage : D.hairline}`,
                         borderRadius: 8, padding: '7px 16px',
@@ -1876,12 +1876,12 @@ function ActiveTimerOverlay({
                     flex: 3,
                     fontFamily: 'Nunito Sans, sans-serif',
                     fontSize: 15, fontWeight: 700,
-                    color: volume ? '#2D2A26' : D.muted,
+                    color: volume ? '#1B2A3D' : D.muted,
                     background: volume ? T.rose : D.glass,
                     border: `1.5px solid ${volume ? T.rose : D.hairline}`,
                     borderRadius: 12, padding: '13px 0',
                     cursor: 'pointer', transition: 'all 250ms ease',
-                    boxShadow: volume ? '0 6px 20px rgba(232,180,184,0.28)' : 'none',
+                    boxShadow: volume ? '0 6px 20px rgba(143,188,235,0.28)' : 'none',
                   }}
                 >
                   ✓ Simpan{volume ? ` ${volume} ${unit}` : ' Sesi'}
@@ -1928,7 +1928,7 @@ function PumpModeTabs({
           margin: '0 auto',
           display: 'flex',
           gap: 6,
-          background: 'rgba(255,253,249,0.7)',
+          background: 'rgba(255,255,255,0.7)',
           border: `1px solid ${T.hairline}`,
           borderRadius: 14,
           padding: 5,
@@ -2185,10 +2185,10 @@ function NormalPumpView({
               cursor: 'pointer',
               border: 'none',
               background: primaryHover ? T.roseDeep : T.rose,
-              color: '#FFFDF9',
+              color: '#FFFFFF',
               boxShadow: primaryHover
-                ? '0 14px 32px rgba(201,123,129,0.32)'
-                : '0 8px 22px rgba(232,180,184,0.30)',
+                ? '0 14px 32px rgba(47,117,184,0.32)'
+                : '0 8px 22px rgba(143,188,235,0.30)',
               transition: 'all 200ms ease',
               transform: primaryHover ? 'translateY(-1px)' : 'translateY(0)',
               display: 'flex',
@@ -2223,7 +2223,7 @@ function NormalPumpView({
           {sortedLogs.length === 0 ? (
             <div
               style={{
-                background: 'rgba(255,253,249,0.62)',
+                background: 'rgba(255,255,255,0.62)',
                 border: `1px dashed ${T.hairline}`,
                 borderRadius: 16,
                 padding: '32px 20px',
@@ -2258,7 +2258,7 @@ function NormalPumpView({
                 listStyle: 'none',
                 margin: 0,
                 padding: 0,
-                background: 'rgba(255,253,249,0.7)',
+                background: 'rgba(255,255,255,0.7)',
                 border: `1px solid ${T.hairline}`,
                 borderRadius: 16,
                 overflow: 'hidden',

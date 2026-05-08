@@ -96,8 +96,8 @@ function CTAButton({
       color: 'var(--ep-warm-white)',
       border: 'none',
       boxShadow: hovered
-        ? '0 8px 24px rgba(201,123,129,0.35)'
-        : '0 4px 16px rgba(232,180,184,0.3)',
+        ? '0 8px 24px rgba(47,117,184,0.35)'
+        : '0 4px 16px rgba(143,188,235,0.3)',
     },
     outline: {
       background: 'transparent',
@@ -110,8 +110,8 @@ function CTAButton({
       color: 'var(--ep-rose-deep)',
       border: 'none',
       boxShadow: hovered
-        ? '0 8px 24px rgba(255,253,249,0.4)'
-        : '0 4px 16px rgba(255,253,249,0.25)',
+        ? '0 8px 24px rgba(255,255,255,0.4)'
+        : '0 4px 16px rgba(255,255,255,0.25)',
     },
   }
 
@@ -175,7 +175,7 @@ function Bullet({ children }: { children: ReactNode }) {
           width: 20,
           height: 20,
           borderRadius: '50%',
-          background: 'rgba(168,196,162,0.2)',
+          background: 'rgba(156,200,183,0.2)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -577,7 +577,7 @@ function HeroSection() {
           right: '-8%',
           width: '55%',
           height: '80%',
-          background: 'radial-gradient(ellipse, rgba(168,196,162,0.2) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(156,200,183,0.2) 0%, transparent 65%)',
           pointerEvents: 'none',
         }}
       />
@@ -588,7 +588,7 @@ function HeroSection() {
           left: '-8%',
           width: '40%',
           height: '55%',
-          background: 'radial-gradient(ellipse, rgba(232,180,184,0.14) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(143,188,235,0.14) 0%, transparent 65%)',
           pointerEvents: 'none',
         }}
       />
@@ -811,7 +811,7 @@ function ProblemSection() {
                     left: 20,
                     fontFamily: 'Georgia, serif',
                     fontSize: 80,
-                    color: 'rgba(232,180,184,0.25)',
+                    color: 'rgba(143,188,235,0.25)',
                     lineHeight: 1,
                     userSelect: 'none',
                   }}
@@ -933,7 +933,7 @@ function TimerMockup() {
               color: 'var(--ep-warm-white)',
               letterSpacing: 0.8,
               animation: 'pulse-sage 2s ease-in-out infinite',
-              boxShadow: '0 0 0 0 rgba(168,196,162,0.5)',
+              boxShadow: '0 0 0 0 rgba(156,200,183,0.5)',
             }}
           >
             ⏹ STOP TIMER
@@ -1736,7 +1736,7 @@ function NightModeSection() {
                       fontFamily: 'Nunito Sans',
                       fontSize: 10,
                       letterSpacing: 2,
-                      color: '#6B6560',
+                      color: 'rgba(247,242,234,0.56)',
                       marginBottom: 12,
                       textTransform: 'uppercase',
                     }}
@@ -1745,7 +1745,8 @@ function NightModeSection() {
                   </p>
                   <div
                     style={{
-                      background: '#2D2520',
+                      background: 'linear-gradient(145deg, #111A26 0%, #0F1822 100%)',
+                      border: '1px solid rgba(247,242,234,0.14)',
                       borderRadius: 14,
                       padding: '20px 16px',
                       marginBottom: 12,
@@ -1756,7 +1757,7 @@ function NightModeSection() {
                         fontFamily: 'Nunito Sans',
                         fontWeight: 800,
                         fontSize: 40,
-                        color: 'var(--ep-amber)',
+                        color: '#A5C9EF',
                         fontVariantNumeric: 'tabular-nums',
                         textAlign: 'center',
                         marginBottom: 6,
@@ -1768,7 +1769,7 @@ function NightModeSection() {
                       style={{
                         fontFamily: 'Kalam',
                         fontSize: 13,
-                        color: '#7A9E76',
+                        color: '#A8CFC0',
                         textAlign: 'center',
                       }}
                     >
@@ -1779,14 +1780,14 @@ function NightModeSection() {
                     type="button"
                     style={{
                       width: '100%',
-                      background: 'rgba(232,168,124,0.2)',
-                      border: '1px solid rgba(232,168,124,0.4)',
+                      background: 'rgba(47,117,184,0.24)',
+                      border: '1px solid rgba(165,201,239,0.32)',
                       borderRadius: 12,
                       padding: '12px 0',
                       fontFamily: 'Nunito Sans',
                       fontWeight: 700,
                       fontSize: 13,
-                      color: 'var(--ep-amber)',
+                      color: '#A5C9EF',
                       cursor: 'pointer',
                     }}
                   >
@@ -1802,7 +1803,7 @@ function NightModeSection() {
                   marginTop: 16,
                 }}
               >
-                Mode Jam 3 Pagi · ink + amber
+                Mode Jam 3 Pagi · bluebell dark
               </p>
             </div>
           </Reveal>
@@ -1884,7 +1885,7 @@ function SocialProofSection() {
                   style={{
                     fontFamily: 'Georgia, serif',
                     fontSize: 72,
-                    color: 'rgba(232,180,184,0.3)',
+                    color: 'rgba(143,188,235,0.3)',
                     position: 'absolute',
                     top: 8,
                     left: 20,
@@ -2055,7 +2056,7 @@ function FinalCTASection() {
           right: '-10%',
           width: '50%',
           height: '160%',
-          background: 'radial-gradient(ellipse, rgba(255,253,249,0.12) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 60%)',
           pointerEvents: 'none',
         }}
       />
@@ -2104,7 +2105,7 @@ function FinalCTASection() {
             style={{
               fontFamily: 'Nunito Sans, sans-serif',
               fontSize: 14,
-              color: 'rgba(255,253,249,0.75)',
+              color: 'rgba(255,255,255,0.75)',
               marginTop: 20,
             }}
           >

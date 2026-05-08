@@ -55,8 +55,8 @@ body {
     50% { transform: translateY(-8px); }
   }
   @keyframes pulse-sage {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 196, 162, 0.5); }
-    50% { box-shadow: 0 0 0 16px rgba(168, 196, 162, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(156, 200, 183, 0.5); }
+    50% { box-shadow: 0 0 0 16px rgba(156, 200, 183, 0); }
   }
   @keyframes progress-fill {
     from { width: 0%; }
@@ -189,122 +189,134 @@ body {
 }
 
 :root {
-  /* EpingJourney palette — light */
-  --ep-cream: #FBF7F2;
-  --ep-warm-white: #FFFDF9;
-  --ep-sand: #F5F0E8;
-  --ep-rose: #E8B4B8;
-  --ep-rose-deep: #C97B81;
-  --ep-sage: #A8C4A2;
-  --ep-sage-deep: #6B8E68;
-  --ep-oat: #E5DCC9;
-  --ep-amber: #E8A87C;
-  --ep-amber-deep: #B86B2A;
-  --ep-sky: #A6C8D9;
-  --ep-lavender: #C9B8D9;
-  --ep-ink: #2D2A26;
-  --ep-soft-ink: #5C574F;
-  --ep-muted: #9A938A;
-  --ep-hairline: #E8E1D5;
+  /* EpingJourney palette — Bluebell Care light */
+  --ep-cream: #F5F9FF;
+  --ep-warm-white: #FFFFFF;
+  --ep-sand: #EAF2FB;
+  --ep-rose: #8FBCEB;
+  --ep-rose-deep: #2F75B8;
+  --ep-sage: #9CC8B7;
+  --ep-sage-deep: #477E70;
+  --ep-oat: #DDEAF7;
+  --ep-amber: #E5AA6D;
+  --ep-amber-deep: #A96521;
+  --ep-sky: #B8D8F2;
+  --ep-lavender: #C7D4F4;
+  --ep-ink: #1B2A3D;
+  --ep-soft-ink: #52657C;
+  --ep-muted: #7A8A9D;
+  --ep-hairline: #D8E5F2;
+  --ep-summary-shell: rgba(255, 255, 255, 0.62);
+  --ep-summary-card: rgba(255, 255, 255, 0.72);
+  --ep-summary-card-featured: linear-gradient(145deg, #FFFFFF 0%, #EAF2FB 100%);
+  --ep-summary-shadow: 0 18px 42px rgba(27, 42, 61, 0.07);
+  --ep-summary-card-shadow: 0 1px 0 rgba(27, 42, 61, 0.04);
+  --ep-summary-card-shadow-hover: 0 14px 32px rgba(27, 42, 61, 0.11);
 
   --destructive-foreground: var(--color-red-700);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-700);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-700);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-700);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --info: var(--ep-rose);
+  --info-foreground: var(--ep-rose-deep);
+  --success: var(--ep-sage);
+  --success-foreground: var(--ep-sage-deep);
+  --warning: var(--ep-amber);
+  --warning-foreground: var(--ep-amber-deep);
+  --background: var(--ep-cream);
+  --foreground: var(--ep-ink);
+  --card: var(--ep-warm-white);
+  --card-foreground: var(--ep-ink);
+  --popover: var(--ep-warm-white);
+  --popover-foreground: var(--ep-ink);
+  --primary: var(--ep-rose-deep);
+  --primary-foreground: var(--ep-warm-white);
+  --secondary: var(--ep-sand);
+  --secondary-foreground: var(--ep-ink);
+  --muted: var(--ep-sand);
+  --muted-foreground: var(--ep-muted);
+  --accent: var(--ep-oat);
+  --accent-foreground: var(--ep-ink);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: var(--ep-hairline);
+  --input: var(--ep-hairline);
+  --ring: var(--ep-rose);
+  --chart-1: var(--ep-rose);
+  --chart-2: var(--ep-sage);
+  --chart-3: var(--ep-amber);
+  --chart-4: var(--ep-sky);
+  --chart-5: var(--ep-rose-deep);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--ep-warm-white);
+  --sidebar-foreground: var(--ep-ink);
+  --sidebar-primary: var(--ep-rose-deep);
+  --sidebar-primary-foreground: var(--ep-warm-white);
+  --sidebar-accent: var(--ep-sand);
+  --sidebar-accent-foreground: var(--ep-ink);
+  --sidebar-border: var(--ep-hairline);
+  --sidebar-ring: var(--ep-rose);
 }
 
 .dark {
-  /* EpingJourney palette — dark */
-  --ep-cream: #1E1B17;
-  --ep-warm-white: #2D2520;
-  --ep-sand: #261F1B;
-  --ep-rose: #B88589;
-  --ep-rose-deep: #E0989E;
-  --ep-sage: #7A9A75;
-  --ep-sage-deep: #A8C4A2;
-  --ep-oat: #3A2F26;
-  --ep-amber: #C28860;
-  --ep-amber-deep: #E8A87C;
-  --ep-sky: #7AA2B5;
-  --ep-lavender: #A893B8;
-  --ep-ink: #F5EDE3;
-  --ep-soft-ink: rgba(245, 237, 227, 0.78);
-  --ep-muted: rgba(245, 237, 227, 0.5);
-  --ep-hairline: rgba(245, 237, 227, 0.12);
+  /* EpingJourney palette — Bluebell Care dark */
+  --ep-cream: #0D141D;
+  --ep-warm-white: #111A26;
+  --ep-sand: #0F1822;
+  --ep-rose: #2F75B8;
+  --ep-rose-deep: #A5C9EF;
+  --ep-sage: #477E70;
+  --ep-sage-deep: #A8CFC0;
+  --ep-oat: #5D6268;
+  --ep-amber: #A96521;
+  --ep-amber-deep: #E9B884;
+  --ep-sky: #728696;
+  --ep-lavender: #7582A8;
+  --ep-ink: #F7F2EA;
+  --ep-soft-ink: rgba(247, 242, 234, 0.78);
+  --ep-muted: rgba(247, 242, 234, 0.56);
+  --ep-hairline: rgba(247, 242, 234, 0.14);
+  --ep-summary-shell: rgba(17, 26, 38, 0.78);
+  --ep-summary-card: rgba(15, 24, 34, 0.82);
+  --ep-summary-card-featured: linear-gradient(145deg, #111A26 0%, #0F1822 100%);
+  --ep-summary-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+  --ep-summary-card-shadow: 0 1px 0 rgba(247, 242, 234, 0.04);
+  --ep-summary-card-shadow-hover: 0 14px 32px rgba(0, 0, 0, 0.32);
 
   --destructive-foreground: var(--color-red-400);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-400);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-400);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-400);
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --info: var(--ep-rose);
+  --info-foreground: var(--ep-rose-deep);
+  --success: var(--ep-sage);
+  --success-foreground: var(--ep-sage-deep);
+  --warning: var(--ep-amber);
+  --warning-foreground: var(--ep-amber-deep);
+  --background: var(--ep-cream);
+  --foreground: var(--ep-ink);
+  --card: var(--ep-warm-white);
+  --card-foreground: var(--ep-ink);
+  --popover: var(--ep-warm-white);
+  --popover-foreground: var(--ep-ink);
+  --primary: var(--ep-rose-deep);
+  --primary-foreground: var(--ep-cream);
+  --secondary: var(--ep-sand);
+  --secondary-foreground: var(--ep-ink);
+  --muted: var(--ep-sand);
+  --muted-foreground: var(--ep-muted);
+  --accent: var(--ep-oat);
+  --accent-foreground: var(--ep-ink);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: var(--ep-hairline);
+  --input: rgba(247, 242, 234, 0.16);
+  --ring: var(--ep-rose-deep);
+  --chart-1: var(--ep-rose-deep);
+  --chart-2: var(--ep-sage-deep);
+  --chart-3: var(--ep-amber-deep);
+  --chart-4: var(--ep-sky);
+  --chart-5: var(--ep-rose);
+  --sidebar: var(--ep-warm-white);
+  --sidebar-foreground: var(--ep-ink);
+  --sidebar-primary: var(--ep-rose-deep);
+  --sidebar-primary-foreground: var(--ep-cream);
+  --sidebar-accent: var(--ep-sand);
+  --sidebar-accent-foreground: var(--ep-ink);
+  --sidebar-border: var(--ep-hairline);
+  --sidebar-ring: var(--ep-rose-deep);
 }
 
 @layer base {
@@ -338,9 +350,9 @@ body {
   right: 0;
   z-index: 40;
   padding: 12px 24px;
-  background: rgba(251,247,242,0.95);
+  background: color-mix(in srgb, var(--ep-cream) 95%, transparent);
   backdrop-filter: blur(12px);
-  border-top: 1px solid #E8E1D5;
+  border-top: 1px solid var(--ep-hairline);
   transform: translateY(100%);
   transition: transform 300ms ease;
   display: none;
