@@ -1896,25 +1896,518 @@ function ActiveTimerOverlay({
 }
 
 /* ============================================================
-   DASHBOARD PAGE ROOT
+   PUMP MODE TABS
    ============================================================ */
 
-export function DashboardPage() {
-  const [timerVisible, setTimerVisible] = useState(false)
+type PumpMode = 'normal' | 'power'
+
+const MODE_STORAGE_KEY = 'epingjourney:pump-mode'
+
+const PUMP_MODES: { id: PumpMode; label: string; emoji: string }[] = [
+  { id: 'normal', label: 'Normal', emoji: '🍼' },
+  { id: 'power',  label: 'Power',  emoji: '⚡' },
+]
+
+function PumpModeTabs({
+  mode,
+  onChange,
+}: {
+  mode: PumpMode
+  onChange: (next: PumpMode) => void
+}) {
+  return (
+    <div
+      style={{
+        background: T.cream,
+        padding: '20px 24px 0',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 960,
+          margin: '0 auto',
+          display: 'flex',
+          gap: 6,
+          background: 'rgba(255,253,249,0.7)',
+          border: `1px solid ${T.hairline}`,
+          borderRadius: 14,
+          padding: 5,
+          width: 'fit-content',
+        }}
+        role="tablist"
+        aria-label="Mode pumping"
+      >
+        {PUMP_MODES.map(({ id, label, emoji }) => {
+          const active = mode === id
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onChange(id)}
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 13,
+                fontWeight: 700,
+                color: active ? T.ink : T.muted,
+                background: active ? T.warmWhite : 'transparent',
+                border: active ? `1px solid ${T.hairline}` : '1px solid transparent',
+                borderRadius: 10,
+                padding: '8px 18px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                boxShadow: active ? '0 2px 6px rgba(45,42,38,0.06)' : 'none',
+                transition: 'all 200ms ease',
+              }}
+            >
+              <span style={{ fontSize: 14 }}>{emoji}</span>
+              {label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   NORMAL PUMP VIEW
+   ============================================================ */
+
+interface NormalSummary {
+  totalOz: number
+  sessionsDone: number
+  avgDurationMin: number
+}
+
+function createNormalSummary(logs: PumpLog[]): NormalSummary {
+  const totalOz = logs.reduce((sum, log) => sum + (log.volumeOz ?? 0), 0)
+  const avgDurationMin = logs.length
+    ? Math.round(logs.reduce((sum, log) => sum + log.durationMin, 0) / logs.length)
+    : 0
+  return {
+    totalOz: Math.round(totalOz * 10) / 10,
+    sessionsDone: logs.length,
+    avgDurationMin,
+  }
+}
+
+function sideLabel(side: PumpSide) {
+  switch (side) {
+    case 'kiri':     return 'Kiri'
+    case 'kanan':    return 'Kanan'
+    case 'keduanya': return 'Keduanya'
+  }
+}
+
+function formatLogVolume(log: PumpLog) {
+  if (log.volumeAmount === null) return 'Tidak dicatat'
+  const value = log.unit === 'oz'
+    ? formatSessionOz(log.volumeAmount)
+    : String(Math.round(log.volumeAmount))
+  return `${value} ${log.unit}`
+}
+
+function NormalPumpView({
+  logs,
+  onStartTimer,
+}: {
+  logs: PumpLog[]
+  onStartTimer: () => void
+}) {
+  const mounted = useMount()
   const now = useCurrentTime()
-  const [logs, setLogs] = useState<PumpLog[]>([])
+  const [primaryHover, setPrimaryHover] = useState(false)
+  const summary = useMemo(() => createNormalSummary(logs), [logs])
+
+  const greeting = now ? getGreeting(now.getHours()) : { text: 'Halo', emoji: '👋' }
+  const dateStr = now
+    ? now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : '–'
+
+  // newest first
+  const sortedLogs = useMemo(
+    () => [...logs].sort((a, b) => b.startTime.localeCompare(a.startTime)),
+    [logs],
+  )
+
+  return (
+    <main style={{ background: T.cream, minHeight: '100vh' }}>
+      {/* Greeting + Date */}
+      <section style={{ padding: '28px 24px 8px' }}>
+        <div
+          style={{
+            maxWidth: 960,
+            margin: '0 auto',
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 0.5s ease, transform 0.5s ease',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 13,
+              fontWeight: 600,
+              color: T.sageDeep,
+              letterSpacing: 0.4,
+              marginBottom: 4,
+            }}
+          >
+            {greeting.emoji} {greeting.text}
+          </p>
+          <h1
+            style={{
+              fontFamily: 'Kalam, cursive',
+              fontWeight: 700,
+              fontSize: 'clamp(26px, 4vw, 36px)',
+              color: T.ink,
+              lineHeight: 1.2,
+              marginBottom: 4,
+            }}
+          >
+            Bunda 👋
+          </h1>
+          <p
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 13,
+              color: T.muted,
+              textTransform: 'capitalize',
+            }}
+          >
+            {dateStr}
+          </p>
+        </div>
+      </section>
+
+      {/* Daily Total Card */}
+      <section style={{ padding: '20px 24px 8px' }}>
+        <div
+          style={{
+            maxWidth: 960,
+            margin: '0 auto',
+            background: `linear-gradient(145deg, ${T.warmWhite} 0%, ${T.sand} 100%)`,
+            border: `1px solid ${T.hairline}`,
+            borderRadius: 20,
+            padding: '22px 24px',
+            boxShadow: '0 10px 30px rgba(45,42,38,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 18,
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s',
+          }}
+        >
+          <span
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              background: `${T.sageDeep}18`,
+              border: `1px solid ${T.sageDeep}2E`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 26,
+              flexShrink: 0,
+            }}
+          >
+            🥛
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 11,
+                fontWeight: 700,
+                color: T.muted,
+                letterSpacing: 1.5,
+                textTransform: 'uppercase',
+                marginBottom: 4,
+              }}
+            >
+              Total Hari Ini
+            </p>
+            <p
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontWeight: 800,
+                fontSize: 'clamp(28px, 4vw, 38px)',
+                color: T.ink,
+                lineHeight: 1,
+                fontVariantNumeric: 'tabular-nums',
+                marginBottom: 4,
+              }}
+            >
+              {formatOz(summary.totalOz)} oz
+            </p>
+            <p
+              style={{
+                fontFamily: 'Nunito Sans, sans-serif',
+                fontSize: 13,
+                color: T.muted,
+              }}
+            >
+              {summary.sessionsDone} sesi · rata-rata {summary.avgDurationMin} menit
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Big Start Button */}
+      <section style={{ padding: '20px 24px 8px' }}>
+        <div
+          style={{
+            maxWidth: 960,
+            margin: '0 auto',
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 0.5s ease 0.18s, transform 0.5s ease 0.18s',
+          }}
+        >
+          <button
+            type="button"
+            onMouseEnter={() => setPrimaryHover(true)}
+            onMouseLeave={() => setPrimaryHover(false)}
+            onClick={onStartTimer}
+            style={{
+              width: '100%',
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontWeight: 700,
+              fontSize: 17,
+              padding: '20px 24px',
+              borderRadius: 18,
+              cursor: 'pointer',
+              border: 'none',
+              background: primaryHover ? T.roseDeep : T.rose,
+              color: '#FFFDF9',
+              boxShadow: primaryHover
+                ? '0 14px 32px rgba(201,123,129,0.32)'
+                : '0 8px 22px rgba(232,180,184,0.30)',
+              transition: 'all 200ms ease',
+              transform: primaryHover ? 'translateY(-1px)' : 'translateY(0)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>▶</span>
+            Mulai Pumping
+          </button>
+        </div>
+      </section>
+
+      {/* Today's Logs */}
+      <section style={{ padding: '20px 24px 36px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <p
+            style={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              color: T.muted,
+              marginBottom: 12,
+            }}
+          >
+            Sesi Hari Ini
+          </p>
+
+          {sortedLogs.length === 0 ? (
+            <div
+              style={{
+                background: 'rgba(255,253,249,0.62)',
+                border: `1px dashed ${T.hairline}`,
+                borderRadius: 16,
+                padding: '32px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontSize: 28, marginBottom: 8 }}>🌿</p>
+              <p
+                style={{
+                  fontFamily: 'Kalam, cursive',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: T.softInk,
+                  marginBottom: 4,
+                }}
+              >
+                Belum ada sesi hari ini
+              </p>
+              <p
+                style={{
+                  fontFamily: 'Nunito Sans, sans-serif',
+                  fontSize: 13,
+                  color: T.muted,
+                }}
+              >
+                Tekan "Mulai Pumping" untuk memulai sesi pertama Bunda.
+              </p>
+            </div>
+          ) : (
+            <ul
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                background: 'rgba(255,253,249,0.7)',
+                border: `1px solid ${T.hairline}`,
+                borderRadius: 16,
+                overflow: 'hidden',
+              }}
+            >
+              {sortedLogs.map((log, index) => (
+                <li
+                  key={log.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    padding: '14px 18px',
+                    borderTop: index === 0 ? 'none' : `1px solid ${T.hairline}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      background: `${T.rose}28`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      fontFamily: 'Nunito Sans, sans-serif',
+                      fontWeight: 800,
+                      fontSize: 13,
+                      color: T.roseDeep,
+                      fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    {log.time}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontFamily: 'Nunito Sans, sans-serif',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color: T.ink,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {formatLogVolume(log)}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'Nunito Sans, sans-serif',
+                        fontSize: 12,
+                        color: T.muted,
+                      }}
+                    >
+                      {log.durationMin} menit · {sideLabel(log.side)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    </main>
+  )
+}
+
+/* ============================================================
+   POWER PUMP VIEW (existing scheduled flow)
+   ============================================================ */
+
+function PowerPumpView({
+  logs,
+  onStartTimer,
+}: {
+  logs: PumpLog[]
+  onStartTimer: () => void
+}) {
+  const now = useCurrentTime()
   const sessions = useMemo(() => createSessions(logs, now ?? new Date()), [logs, now])
   const summary = useMemo(() => createSummary(sessions), [sessions])
   const nextSession = nextActionableSession(sessions)
+
+  return (
+    <main style={{ background: T.cream, minHeight: '100vh' }}>
+      <WelcomeSection
+        sessions={sessions}
+        nextSession={nextSession}
+        onStartTimer={onStartTimer}
+      />
+      <StatsRow summary={summary} />
+      <SessionTimeline sessions={sessions} />
+    </main>
+  )
+}
+
+/* ============================================================
+   DASHBOARD PAGE ROOT
+   ============================================================ */
+
+function loadInitialMode(): PumpMode {
+  if (typeof window === 'undefined') return 'normal'
+  const stored = window.localStorage.getItem(MODE_STORAGE_KEY)
+  return stored === 'power' ? 'power' : 'normal'
+}
+
+export function DashboardPage() {
+  const [mode, setMode] = useState<PumpMode>(loadInitialMode)
+  const [timerVisible, setTimerVisible] = useState(false)
+  const [powerLogs, setPowerLogs] = useState<PumpLog[]>([])
+  const [normalLogs, setNormalLogs] = useState<PumpLog[]>([])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(MODE_STORAGE_KEY, mode)
+  }, [mode])
 
   const handleSaveTimerSession = (result: TimerSessionResult) => {
     const parsedVolume = Number.parseFloat(result.volume.replace(',', '.'))
     const volumeOz = volumeToOz(result.volume, result.unit)
     const durationMin = Math.max(1, Math.round(result.elapsedSec / 60))
-    const scheduledTime = nextSession?.time ?? formatClock(result.startedAt)
+
+    if (mode === 'power') {
+      const powerSessions = createSessions(powerLogs, new Date())
+      const nextSession = nextActionableSession(powerSessions)
+      const scheduledTime = nextSession?.time ?? formatClock(result.startedAt)
+      const completedLog: PumpLog = {
+        id: Date.now(),
+        time: scheduledTime,
+        volumeAmount: Number.isFinite(parsedVolume) ? parsedVolume : null,
+        volumeOz,
+        durationMin,
+        unit: result.unit,
+        side: result.side,
+        startTime: result.startedAt.toISOString(),
+        endTime: result.endedAt.toISOString(),
+      }
+      setPowerLogs((current) => [
+        ...current.filter((log) => log.time !== scheduledTime),
+        completedLog,
+      ])
+      return
+    }
+
+    // Normal mode: each session is its own ad-hoc log
     const completedLog: PumpLog = {
       id: Date.now(),
-      time: scheduledTime,
+      time: formatClock(result.startedAt),
       volumeAmount: Number.isFinite(parsedVolume) ? parsedVolume : null,
       volumeOz,
       durationMin,
@@ -1923,27 +2416,31 @@ export function DashboardPage() {
       startTime: result.startedAt.toISOString(),
       endTime: result.endedAt.toISOString(),
     }
-
-    setLogs((current) => [
-      ...current.filter((log) => log.time !== scheduledTime),
-      completedLog,
-    ])
+    setNormalLogs((current) => [...current, completedLog])
   }
+
+  const overlayCompletedCount =
+    mode === 'power'
+      ? createSummary(createSessions(powerLogs, new Date())).sessionsDone
+      : normalLogs.length
 
   return (
     <>
       <DashboardNav />
-      <main style={{ background: T.cream, minHeight: '100vh' }}>
-        <WelcomeSection
-          sessions={sessions}
-          nextSession={nextSession}
+      <PumpModeTabs mode={mode} onChange={setMode} />
+      {mode === 'normal' ? (
+        <NormalPumpView
+          logs={normalLogs}
           onStartTimer={() => setTimerVisible(true)}
         />
-        <StatsRow summary={summary} />
-        <SessionTimeline sessions={sessions} />
-      </main>
+      ) : (
+        <PowerPumpView
+          logs={powerLogs}
+          onStartTimer={() => setTimerVisible(true)}
+        />
+      )}
       <ActiveTimerOverlay
-        completedCount={summary.sessionsDone}
+        completedCount={overlayCompletedCount}
         visible={timerVisible}
         onClose={() => setTimerVisible(false)}
         onSave={handleSaveTimerSession}
