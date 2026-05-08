@@ -32,20 +32,22 @@ body {
   --font-sans: 'Geist Variable', sans-serif;
   --font-kalam: 'Kalam', cursive;
   --font-nunito: 'Nunito Sans', sans-serif;
-  --color-ep-cream: #FBF7F2;
-  --color-ep-warm-white: #FFFDF9;
-  --color-ep-rose: #E8B4B8;
-  --color-ep-rose-deep: #C97B81;
-  --color-ep-sage: #A8C4A2;
-  --color-ep-sage-deep: #6B8E68;
-  --color-ep-oat: #E5DCC9;
-  --color-ep-amber: #E8A87C;
-  --color-ep-sky: #A6C8D9;
-  --color-ep-lavender: #C9B8D9;
-  --color-ep-ink: #2D2A26;
-  --color-ep-soft-ink: #5C574F;
-  --color-ep-muted: #9A938A;
-  --color-ep-hairline: #E8E1D5;
+  --color-ep-cream: var(--ep-cream);
+  --color-ep-warm-white: var(--ep-warm-white);
+  --color-ep-rose: var(--ep-rose);
+  --color-ep-rose-deep: var(--ep-rose-deep);
+  --color-ep-sage: var(--ep-sage);
+  --color-ep-sage-deep: var(--ep-sage-deep);
+  --color-ep-oat: var(--ep-oat);
+  --color-ep-amber: var(--ep-amber);
+  --color-ep-amber-deep: var(--ep-amber-deep);
+  --color-ep-sand: var(--ep-sand);
+  --color-ep-sky: var(--ep-sky);
+  --color-ep-lavender: var(--ep-lavender);
+  --color-ep-ink: var(--ep-ink);
+  --color-ep-soft-ink: var(--ep-soft-ink);
+  --color-ep-muted: var(--ep-muted);
+  --color-ep-hairline: var(--ep-hairline);
   --animate-float: float 4s ease-in-out infinite;
   --animate-pulse-sage: pulse-sage 2s ease-in-out infinite;
   @keyframes float {
@@ -187,6 +189,24 @@ body {
 }
 
 :root {
+  /* EpingJourney palette — light */
+  --ep-cream: #FBF7F2;
+  --ep-warm-white: #FFFDF9;
+  --ep-sand: #F5F0E8;
+  --ep-rose: #E8B4B8;
+  --ep-rose-deep: #C97B81;
+  --ep-sage: #A8C4A2;
+  --ep-sage-deep: #6B8E68;
+  --ep-oat: #E5DCC9;
+  --ep-amber: #E8A87C;
+  --ep-amber-deep: #B86B2A;
+  --ep-sky: #A6C8D9;
+  --ep-lavender: #C9B8D9;
+  --ep-ink: #2D2A26;
+  --ep-soft-ink: #5C574F;
+  --ep-muted: #9A938A;
+  --ep-hairline: #E8E1D5;
+
   --destructive-foreground: var(--color-red-700);
   --info: var(--color-blue-500);
   --info-foreground: var(--color-blue-700);
@@ -229,6 +249,24 @@ body {
 }
 
 .dark {
+  /* EpingJourney palette — dark */
+  --ep-cream: #1E1B17;
+  --ep-warm-white: #2D2520;
+  --ep-sand: #261F1B;
+  --ep-rose: #B88589;
+  --ep-rose-deep: #E0989E;
+  --ep-sage: #7A9A75;
+  --ep-sage-deep: #A8C4A2;
+  --ep-oat: #3A2F26;
+  --ep-amber: #C28860;
+  --ep-amber-deep: #E8A87C;
+  --ep-sky: #7AA2B5;
+  --ep-lavender: #A893B8;
+  --ep-ink: #F5EDE3;
+  --ep-soft-ink: rgba(245, 237, 227, 0.78);
+  --ep-muted: rgba(245, 237, 227, 0.5);
+  --ep-hairline: rgba(245, 237, 227, 0.12);
+
   --destructive-foreground: var(--color-red-400);
   --info: var(--color-blue-500);
   --info-foreground: var(--color-blue-400);

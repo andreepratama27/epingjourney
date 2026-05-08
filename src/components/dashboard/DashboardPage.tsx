@@ -1,25 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ThemeToggle } from '#/components/theme-toggle'
 
 /* ============================================================
    DESIGN TOKENS
    ============================================================ */
 
 const T = {
-  cream: '#FBF7F2',
-  warmWhite: '#FFFDF9',
-  oat: '#E5DCC9',
-  sand: '#F5F0E8',
-  rose: '#E8B4B8',
-  roseDeep: '#C97B81',
-  sage: '#A8C4A2',
-  sageDeep: '#6B8E68',
-  amber: '#E8A87C',
-  amberDeep: '#B86B2A',
-  sky: '#A6C8D9',
-  ink: '#2D2A26',
-  softInk: '#5C574F',
-  muted: '#9A938A',
-  hairline: '#E8E1D5',
+  cream: 'var(--ep-cream)',
+  warmWhite: 'var(--ep-warm-white)',
+  oat: 'var(--ep-oat)',
+  sand: 'var(--ep-sand)',
+  rose: 'var(--ep-rose)',
+  roseDeep: 'var(--ep-rose-deep)',
+  sage: 'var(--ep-sage)',
+  sageDeep: 'var(--ep-sage-deep)',
+  amber: 'var(--ep-amber)',
+  amberDeep: 'var(--ep-amber-deep)',
+  sky: 'var(--ep-sky)',
+  ink: 'var(--ep-ink)',
+  softInk: 'var(--ep-soft-ink)',
+  muted: 'var(--ep-muted)',
+  hairline: 'var(--ep-hairline)',
 } as const
 
 /* ── Dark palette used inside the timer overlay ── */
@@ -296,7 +297,7 @@ function DashboardNav() {
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: 'rgba(251,247,242,0.93)',
+        background: 'color-mix(in srgb, var(--ep-cream) 93%, transparent)',
         backdropFilter: 'blur(14px)',
         borderBottom: `1px solid ${T.hairline}`,
       }}
@@ -346,6 +347,8 @@ function DashboardNav() {
         </span>
 
         <div style={{ flex: 1 }} />
+
+        <ThemeToggle />
 
         {/* User */}
         <div

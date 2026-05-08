@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react'
+import { ThemeToggle } from '#/components/theme-toggle'
 
 /* ============================================================
    HOOKS
@@ -91,8 +92,8 @@ function CTAButton({
 
   const variants: Record<typeof variant, CSSProperties> = {
     primary: {
-      background: hovered ? '#C97B81' : '#E8B4B8',
-      color: '#FFFDF9',
+      background: hovered ? 'var(--ep-rose-deep)' : 'var(--ep-rose)',
+      color: 'var(--ep-warm-white)',
       border: 'none',
       boxShadow: hovered
         ? '0 8px 24px rgba(201,123,129,0.35)'
@@ -100,13 +101,13 @@ function CTAButton({
     },
     outline: {
       background: 'transparent',
-      color: '#C97B81',
-      border: '1.5px solid #E8B4B8',
+      color: 'var(--ep-rose-deep)',
+      border: '1.5px solid var(--ep-rose)',
       boxShadow: 'none',
     },
     white: {
-      background: '#FFFDF9',
-      color: '#C97B81',
+      background: 'var(--ep-warm-white)',
+      color: 'var(--ep-rose-deep)',
       border: 'none',
       boxShadow: hovered
         ? '0 8px 24px rgba(255,253,249,0.4)'
@@ -135,7 +136,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
         fontWeight: 600,
         letterSpacing: 2,
         textTransform: 'uppercase',
-        color: '#A8C4A2',
+        color: 'var(--ep-sage)',
         marginBottom: 12,
       }}
     >
@@ -151,9 +152,9 @@ function FeatureNumber({ n }: { n: string }) {
         fontFamily: 'Kalam, cursive',
         fontWeight: 700,
         fontSize: 13,
-        color: '#E8B4B8',
-        background: '#FBF7F2',
-        border: '1.5px solid #E8E1D5',
+        color: 'var(--ep-rose)',
+        background: 'var(--ep-cream)',
+        border: '1.5px solid var(--ep-hairline)',
         borderRadius: 8,
         padding: '3px 10px',
         display: 'inline-block',
@@ -183,14 +184,14 @@ function Bullet({ children }: { children: ReactNode }) {
         }}
       >
         <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-          <path d="M1 4L3.5 6.5L9 1" stroke="#6B8E68" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M1 4L3.5 6.5L9 1" stroke="var(--ep-sage-deep)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
       <span
         style={{
           fontFamily: 'Nunito Sans, sans-serif',
           fontSize: 15,
-          color: '#5C574F',
+          color: 'var(--ep-soft-ink)',
           lineHeight: 1.5,
         }}
       >
@@ -215,7 +216,7 @@ function PhoneFrame({ children, dark = false, float = false }: { children: React
       <div
         style={{
           width: 260,
-          background: dark ? '#3a3530' : '#E5DCC9',
+          background: dark ? '#3a3530' : 'var(--ep-oat)',
           borderRadius: 44,
           padding: 4,
           boxShadow: dark
@@ -225,7 +226,7 @@ function PhoneFrame({ children, dark = false, float = false }: { children: React
       >
         <div
           style={{
-            background: dark ? '#1a1714' : '#FFFDF9',
+            background: dark ? '#1a1714' : 'var(--ep-warm-white)',
             borderRadius: 40,
             overflow: 'hidden',
           }}
@@ -236,7 +237,7 @@ function PhoneFrame({ children, dark = false, float = false }: { children: React
               style={{
                 width: 80,
                 height: 20,
-                background: dark ? '#3a3530' : '#E5DCC9',
+                background: dark ? '#3a3530' : 'var(--ep-oat)',
                 borderRadius: '0 0 12px 12px',
               }}
             />
@@ -261,9 +262,11 @@ function Navbar() {
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: scrolled ? 'rgba(251,247,242,0.93)' : '#FBF7F2',
+        background: scrolled
+          ? 'color-mix(in srgb, var(--ep-cream) 93%, transparent)'
+          : 'var(--ep-cream)',
         backdropFilter: scrolled ? 'blur(14px)' : 'none',
-        borderBottom: `1px solid ${scrolled ? '#E8E1D5' : 'transparent'}`,
+        borderBottom: `1px solid ${scrolled ? 'var(--ep-hairline)' : 'transparent'}`,
         transition: 'all 300ms ease',
       }}
     >
@@ -296,7 +299,7 @@ function Navbar() {
               fontFamily: 'Kalam, cursive',
               fontWeight: 700,
               fontSize: 20,
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
               lineHeight: 1,
             }}
           >
@@ -326,6 +329,7 @@ function Navbar() {
             </NavLink>
           ))}
 
+          <ThemeToggle />
           <SignInButton />
         </div>
       </div>
@@ -344,7 +348,7 @@ function NavLink({ children, href }: { children: ReactNode; href: string }) {
         fontFamily: 'Nunito Sans, sans-serif',
         fontSize: 15,
         fontWeight: 500,
-        color: hovered ? '#C97B81' : '#5C574F',
+        color: hovered ? 'var(--ep-rose-deep)' : 'var(--ep-soft-ink)',
         textDecoration: 'none',
         transition: 'color 200ms ease',
       }}
@@ -365,9 +369,9 @@ function SignInButton() {
         fontFamily: 'Nunito Sans, sans-serif',
         fontSize: 14,
         fontWeight: 600,
-        color: hovered ? '#C97B81' : '#2D2A26',
+        color: hovered ? 'var(--ep-rose-deep)' : 'var(--ep-ink)',
         background: 'transparent',
-        border: `1.5px solid ${hovered ? '#C97B81' : '#E8E1D5'}`,
+        border: `1.5px solid ${hovered ? 'var(--ep-rose-deep)' : 'var(--ep-hairline)'}`,
         borderRadius: 10,
         padding: '7px 18px',
         cursor: 'pointer',
@@ -400,7 +404,7 @@ function HeroPhoneMockup() {
             fontFamily: 'Nunito Sans',
             fontSize: 10,
             letterSpacing: 2,
-            color: '#9A938A',
+            color: 'var(--ep-muted)',
             marginBottom: 14,
             textTransform: 'uppercase',
           }}
@@ -423,13 +427,13 @@ function HeroPhoneMockup() {
             viewBox="0 0 100 100"
             style={{ transform: 'rotate(-90deg)' }}
           >
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#E5DCC9" strokeWidth="7" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--ep-oat)" strokeWidth="7" />
             <circle
               cx="50"
               cy="50"
               r="42"
               fill="none"
-              stroke="#A8C4A2"
+              stroke="var(--ep-sage)"
               strokeWidth="7"
               strokeDasharray={`${2 * Math.PI * 42 * 0.68} ${2 * Math.PI * 42}`}
               strokeLinecap="round"
@@ -455,7 +459,7 @@ function HeroPhoneMockup() {
             fontFamily: 'Nunito Sans',
             fontWeight: 800,
             fontSize: 34,
-            color: '#2D2A26',
+            color: 'var(--ep-ink)',
             letterSpacing: 2,
             fontVariantNumeric: 'tabular-nums',
             marginBottom: 14,
@@ -468,7 +472,7 @@ function HeroPhoneMockup() {
           type="button"
           style={{
             width: '100%',
-            background: '#E8B4B8',
+            background: 'var(--ep-rose)',
             border: 'none',
             borderRadius: 11,
             padding: '10px 0',
@@ -476,7 +480,7 @@ function HeroPhoneMockup() {
             fontFamily: 'Nunito Sans',
             fontWeight: 700,
             fontSize: 12,
-            color: '#FFFDF9',
+            color: 'var(--ep-warm-white)',
             letterSpacing: 0.8,
           }}
         >
@@ -488,7 +492,7 @@ function HeroPhoneMockup() {
       <div style={{ padding: '0 16px 20px' }}>
         <div
           style={{
-            background: '#F5F0E8',
+            background: 'var(--ep-sand)',
             borderRadius: 12,
             padding: '12px 14px',
           }}
@@ -505,7 +509,7 @@ function HeroPhoneMockup() {
               style={{
                 fontFamily: 'Kalam',
                 fontSize: 13,
-                color: '#6B8E68',
+                color: 'var(--ep-sage-deep)',
               }}
             >
               Total Hari Ini
@@ -515,7 +519,7 @@ function HeroPhoneMockup() {
                 fontFamily: 'Nunito Sans',
                 fontWeight: 800,
                 fontSize: 15,
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -524,14 +528,14 @@ function HeroPhoneMockup() {
           </div>
           <div
             style={{
-              background: '#E5DCC9',
+              background: 'var(--ep-oat)',
               borderRadius: 4,
               height: 5,
             }}
           >
             <div
               style={{
-                background: '#A8C4A2',
+                background: 'var(--ep-sage)',
                 borderRadius: 4,
                 height: 5,
                 width: '60%',
@@ -542,7 +546,7 @@ function HeroPhoneMockup() {
             style={{
               fontFamily: 'Nunito Sans',
               fontSize: 10,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
               marginTop: 5,
             }}
           >
@@ -559,7 +563,7 @@ function HeroSection() {
     <section
       className="ep-hero ep-section"
       style={{
-        background: '#FBF7F2',
+        background: 'var(--ep-cream)',
         padding: '80px 24px 100px',
         position: 'relative',
         overflow: 'hidden',
@@ -608,7 +612,7 @@ function HeroSection() {
                 fontFamily: 'Kalam, cursive',
                 fontSize: 16,
                 fontWeight: 400,
-                color: '#6B8E68',
+                color: 'var(--ep-sage-deep)',
                 marginBottom: 14,
                 letterSpacing: 0.3,
               }}
@@ -623,7 +627,7 @@ function HeroSection() {
                 fontFamily: 'Kalam, cursive',
                 fontWeight: 700,
                 fontSize: 'clamp(38px, 5.5vw, 62px)',
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
                 lineHeight: 1.2,
                 marginBottom: 20,
                 letterSpacing: -0.5,
@@ -641,7 +645,7 @@ function HeroSection() {
                 fontFamily: 'Nunito Sans, sans-serif',
                 fontSize: 18,
                 fontWeight: 400,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
                 lineHeight: 1.65,
                 marginBottom: 32,
                 maxWidth: 460,
@@ -665,7 +669,7 @@ function HeroSection() {
                 style={{
                   fontFamily: 'Nunito Sans, sans-serif',
                   fontSize: 13,
-                  color: '#9A938A',
+                  color: 'var(--ep-muted)',
                   marginLeft: 4,
                 }}
               >
@@ -682,18 +686,18 @@ function HeroSection() {
                 gap: 10,
                 marginTop: 36,
                 padding: '16px 20px',
-                background: '#FFFDF9',
+                background: 'var(--ep-warm-white)',
                 borderRadius: 14,
-                border: '1px solid #E8E1D5',
+                border: '1px solid var(--ep-hairline)',
                 maxWidth: 440,
               }}
             >
-              <span style={{ color: '#E8A87C', fontSize: 14, lineHeight: 1.6, flexShrink: 0 }}>★★★★★</span>
+              <span style={{ color: 'var(--ep-amber)', fontSize: 14, lineHeight: 1.6, flexShrink: 0 }}>★★★★★</span>
               <p
                 style={{
                   fontFamily: 'Nunito Sans, sans-serif',
                   fontSize: 14,
-                  color: '#5C574F',
+                  color: 'var(--ep-soft-ink)',
                   fontStyle: 'italic',
                   lineHeight: 1.5,
                 }}
@@ -703,7 +707,7 @@ function HeroSection() {
                   style={{
                     fontStyle: 'normal',
                     fontWeight: 600,
-                    color: '#6B8E68',
+                    color: 'var(--ep-sage-deep)',
                     display: 'block',
                     marginTop: 2,
                     fontSize: 12,
@@ -750,7 +754,7 @@ function ProblemSection() {
       id="kenapa-kami"
       className="ep-section"
       style={{
-        background: '#FFFDF9',
+        background: 'var(--ep-warm-white)',
         padding: '100px 24px',
       }}
     >
@@ -761,7 +765,7 @@ function ProblemSection() {
               fontFamily: 'Nunito Sans, sans-serif',
               fontWeight: 700,
               fontSize: 'clamp(26px, 3.5vw, 40px)',
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
               marginBottom: 16,
             }}
           >
@@ -771,7 +775,7 @@ function ProblemSection() {
             style={{
               width: 60,
               height: 3,
-              background: '#E8B4B8',
+              background: 'var(--ep-rose)',
               borderRadius: 2,
               margin: '0 auto',
             }}
@@ -790,8 +794,8 @@ function ProblemSection() {
             <Reveal key={emoji} delay={i * 100}>
               <div
                 style={{
-                  background: '#FBF7F2',
-                  border: '1px solid #E8E1D5',
+                  background: 'var(--ep-cream)',
+                  border: '1px solid var(--ep-hairline)',
                   borderRadius: 20,
                   padding: '36px 28px',
                   boxShadow: '0 2px 12px rgba(45,42,38,0.04)',
@@ -819,7 +823,7 @@ function ProblemSection() {
                   style={{
                     fontFamily: 'Kalam, cursive',
                     fontSize: 20,
-                    color: '#2D2A26',
+                    color: 'var(--ep-ink)',
                     lineHeight: 1.45,
                     position: 'relative',
                   }}
@@ -836,7 +840,7 @@ function ProblemSection() {
             style={{
               fontFamily: 'Nunito Sans, sans-serif',
               fontSize: 17,
-              color: '#5C574F',
+              color: 'var(--ep-soft-ink)',
               lineHeight: 1.7,
               maxWidth: 600,
               margin: '0 auto',
@@ -864,7 +868,7 @@ function TimerMockup() {
             fontFamily: 'Nunito Sans',
             fontSize: 10,
             letterSpacing: 2,
-            color: '#9A938A',
+            color: 'var(--ep-muted)',
             marginBottom: 20,
             textTransform: 'uppercase',
           }}
@@ -875,7 +879,7 @@ function TimerMockup() {
         {/* Big timer */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE7DC 100%)',
+            background: 'linear-gradient(135deg, var(--ep-sand) 0%, var(--ep-oat) 100%)',
             borderRadius: 20,
             padding: '28px 16px',
             marginBottom: 16,
@@ -886,7 +890,7 @@ function TimerMockup() {
               fontFamily: 'Nunito Sans',
               fontWeight: 800,
               fontSize: 44,
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
               letterSpacing: 3,
               fontVariantNumeric: 'tabular-nums',
               marginBottom: 8,
@@ -898,7 +902,7 @@ function TimerMockup() {
             style={{
               fontFamily: 'Nunito Sans',
               fontSize: 11,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
               letterSpacing: 1,
             }}
           >
@@ -918,7 +922,7 @@ function TimerMockup() {
             type="button"
             style={{
               width: '100%',
-              background: '#E8B4B8',
+              background: 'var(--ep-rose)',
               border: 'none',
               borderRadius: 14,
               padding: '14px 0',
@@ -926,7 +930,7 @@ function TimerMockup() {
               fontFamily: 'Nunito Sans',
               fontWeight: 700,
               fontSize: 14,
-              color: '#FFFDF9',
+              color: 'var(--ep-warm-white)',
               letterSpacing: 0.8,
               animation: 'pulse-sage 2s ease-in-out infinite',
               boxShadow: '0 0 0 0 rgba(168,196,162,0.5)',
@@ -940,7 +944,7 @@ function TimerMockup() {
           style={{
             fontFamily: 'Nunito Sans',
             fontSize: 11,
-            color: '#A8C4A2',
+            color: 'var(--ep-sage)',
             marginTop: 12,
             display: 'flex',
             alignItems: 'center',
@@ -953,7 +957,7 @@ function TimerMockup() {
               width: 7,
               height: 7,
               borderRadius: '50%',
-              background: '#A8C4A2',
+              background: 'var(--ep-sage)',
               display: 'inline-block',
             }}
           />
@@ -965,7 +969,7 @@ function TimerMockup() {
       <div
         style={{
           margin: '0 16px 20px',
-          background: '#F5F0E8',
+          background: 'var(--ep-sand)',
           borderRadius: 14,
           padding: '12px 14px',
         }}
@@ -974,7 +978,7 @@ function TimerMockup() {
           style={{
             fontFamily: 'Nunito Sans',
             fontSize: 10,
-            color: '#9A938A',
+            color: 'var(--ep-muted)',
             letterSpacing: 1.5,
             marginBottom: 10,
             textTransform: 'uppercase',
@@ -993,14 +997,14 @@ function TimerMockup() {
               display: 'flex',
               justifyContent: 'space-between',
               padding: '5px 0',
-              borderBottom: '1px solid #E8E1D5',
+              borderBottom: '1px solid var(--ep-hairline)',
             }}
           >
             <span
               style={{
                 fontFamily: 'Nunito Sans',
                 fontSize: 12,
-                color: row.done ? '#6B8E68' : '#E8A87C',
+                color: row.done ? 'var(--ep-sage-deep)' : 'var(--ep-amber)',
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -1011,7 +1015,7 @@ function TimerMockup() {
                 fontFamily: 'Nunito Sans',
                 fontWeight: 600,
                 fontSize: 12,
-                color: row.done ? '#2D2A26' : '#E8A87C',
+                color: row.done ? 'var(--ep-ink)' : 'var(--ep-amber)',
               }}
             >
               {row.done ? '✓' : '⏱'} {row.vol}
@@ -1029,7 +1033,7 @@ function Feature1Section() {
       id="fitur"
       className="ep-section"
       style={{
-        background: '#FBF7F2',
+        background: 'var(--ep-cream)',
         padding: '100px 24px',
       }}
     >
@@ -1060,7 +1064,7 @@ function Feature1Section() {
                 fontFamily: 'Kalam, cursive',
                 fontWeight: 700,
                 fontSize: 'clamp(28px, 3.5vw, 42px)',
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
                 lineHeight: 1.2,
                 marginBottom: 16,
               }}
@@ -1073,7 +1077,7 @@ function Feature1Section() {
               style={{
                 fontFamily: 'Nunito Sans, sans-serif',
                 fontSize: 17,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
                 lineHeight: 1.7,
                 marginBottom: 28,
               }}
@@ -1109,9 +1113,9 @@ function SchedulerMockup() {
   ]
 
   const statusColor = {
-    done: '#6B8E68',
-    overdue: '#E8A87C',
-    upcoming: '#A6C8D9',
+    done: 'var(--ep-sage-deep)',
+    overdue: 'var(--ep-amber)',
+    upcoming: 'var(--ep-sky)',
   }
 
   const statusIcon = { done: '✓', overdue: '⚠', upcoming: '◷' }
@@ -1119,8 +1123,8 @@ function SchedulerMockup() {
   return (
     <div
       style={{
-        background: '#FFFDF9',
-        border: '1px solid #E8E1D5',
+        background: 'var(--ep-warm-white)',
+        border: '1px solid var(--ep-hairline)',
         borderRadius: 20,
         overflow: 'hidden',
         boxShadow: '0 8px 32px rgba(45,42,38,0.07)',
@@ -1132,8 +1136,8 @@ function SchedulerMockup() {
       <div
         style={{
           padding: '18px 20px',
-          background: '#FBF7F2',
-          borderBottom: '1px solid #E8E1D5',
+          background: 'var(--ep-cream)',
+          borderBottom: '1px solid var(--ep-hairline)',
         }}
       >
         <p
@@ -1141,7 +1145,7 @@ function SchedulerMockup() {
             fontFamily: 'Nunito Sans',
             fontWeight: 700,
             fontSize: 12,
-            color: '#9A938A',
+            color: 'var(--ep-muted)',
             letterSpacing: 2,
             textTransform: 'uppercase',
           }}
@@ -1159,7 +1163,7 @@ function SchedulerMockup() {
               display: 'flex',
               alignItems: 'center',
               padding: '12px 20px',
-              borderBottom: '1px solid #E8E1D5',
+              borderBottom: '1px solid var(--ep-hairline)',
               background: s.status === 'overdue' ? 'rgba(232,168,124,0.07)' : 'transparent',
             }}
           >
@@ -1168,7 +1172,7 @@ function SchedulerMockup() {
                 fontFamily: 'Nunito Sans',
                 fontWeight: 700,
                 fontSize: 13,
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
                 width: 48,
                 fontVariantNumeric: 'tabular-nums',
                 flexShrink: 0,
@@ -1210,14 +1214,14 @@ function SchedulerMockup() {
           style={{
             width: '100%',
             background: 'transparent',
-            border: '1.5px solid #E8B4B8',
+            border: '1.5px solid var(--ep-rose)',
             borderRadius: 10,
             padding: '9px 0',
             cursor: 'pointer',
             fontFamily: 'Nunito Sans',
             fontWeight: 600,
             fontSize: 13,
-            color: '#C97B81',
+            color: 'var(--ep-rose-deep)',
           }}
         >
           Geser sisa jadwal →
@@ -1232,7 +1236,7 @@ function Feature2Section() {
     <section
       className="ep-section"
       style={{
-        background: '#FFFDF9',
+        background: 'var(--ep-warm-white)',
         padding: '100px 24px',
       }}
     >
@@ -1258,7 +1262,7 @@ function Feature2Section() {
                 fontFamily: 'Kalam, cursive',
                 fontWeight: 700,
                 fontSize: 'clamp(28px, 3.5vw, 42px)',
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
                 lineHeight: 1.2,
                 marginBottom: 16,
               }}
@@ -1271,7 +1275,7 @@ function Feature2Section() {
               style={{
                 fontFamily: 'Nunito Sans, sans-serif',
                 fontSize: 17,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
                 lineHeight: 1.7,
                 marginBottom: 20,
               }}
@@ -1282,8 +1286,8 @@ function Feature2Section() {
           <Reveal delay={160}>
             <div
               style={{
-                background: '#FBF7F2',
-                border: '1px solid #E8E1D5',
+                background: 'var(--ep-cream)',
+                border: '1px solid var(--ep-hairline)',
                 borderRadius: 14,
                 padding: '16px 20px',
                 marginBottom: 24,
@@ -1293,7 +1297,7 @@ function Feature2Section() {
                 style={{
                   fontFamily: 'Kalam, cursive',
                   fontSize: 17,
-                  color: '#2D2A26',
+                  color: 'var(--ep-ink)',
                   lineHeight: 1.5,
                   marginBottom: 8,
                 }}
@@ -1304,7 +1308,7 @@ function Feature2Section() {
                 style={{
                   fontFamily: 'Nunito Sans',
                   fontSize: 13,
-                  color: '#9A938A',
+                  color: 'var(--ep-muted)',
                 }}
               >
                 Kami tanya dulu — Bunda yang putuskan.
@@ -1316,7 +1320,7 @@ function Feature2Section() {
               style={{
                 fontFamily: 'Nunito Sans, sans-serif',
                 fontSize: 16,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
                 lineHeight: 1.65,
               }}
             >
@@ -1356,7 +1360,7 @@ function OutputMockup() {
           style={{
             fontFamily: 'Kalam',
             fontSize: 14,
-            color: '#6B8E68',
+            color: 'var(--ep-sage-deep)',
             textAlign: 'center',
             marginBottom: 20,
           }}
@@ -1371,7 +1375,7 @@ function OutputMockup() {
               fontFamily: 'Nunito Sans',
               fontWeight: 800,
               fontSize: 52,
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
               fontVariantNumeric: 'tabular-nums',
               lineHeight: 1,
               animation: inView ? 'count-up 0.5s ease forwards' : 'none',
@@ -1385,7 +1389,7 @@ function OutputMockup() {
               fontFamily: 'Nunito Sans',
               fontWeight: 600,
               fontSize: 18,
-              color: '#5C574F',
+              color: 'var(--ep-soft-ink)',
             }}
           >
             oz
@@ -1396,7 +1400,7 @@ function OutputMockup() {
         <div style={{ marginBottom: 8 }}>
           <div
             style={{
-              background: '#E5DCC9',
+              background: 'var(--ep-oat)',
               borderRadius: 8,
               height: 10,
               overflow: 'hidden',
@@ -1404,7 +1408,7 @@ function OutputMockup() {
           >
             <div
               style={{
-                background: 'linear-gradient(90deg, #A8C4A2, #6B8E68)',
+                background: 'linear-gradient(90deg, var(--ep-sage), var(--ep-sage-deep))',
                 borderRadius: 8,
                 height: '100%',
                 width: inView ? '81.7%' : '0%',
@@ -1426,7 +1430,7 @@ function OutputMockup() {
             style={{
               fontFamily: 'Nunito Sans',
               fontSize: 11,
-              color: '#6B8E68',
+              color: 'var(--ep-sage-deep)',
               fontWeight: 600,
             }}
           >
@@ -1436,7 +1440,7 @@ function OutputMockup() {
             style={{
               fontFamily: 'Nunito Sans',
               fontSize: 11,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
             }}
           >
             Target: 30 oz
@@ -1446,7 +1450,7 @@ function OutputMockup() {
         {/* Last session */}
         <div
           style={{
-            background: '#F5F0E8',
+            background: 'var(--ep-sand)',
             borderRadius: 12,
             padding: '10px 14px',
             marginBottom: 16,
@@ -1456,7 +1460,7 @@ function OutputMockup() {
             style={{
               fontFamily: 'Nunito Sans',
               fontSize: 11,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
               marginBottom: 4,
             }}
           >
@@ -1467,7 +1471,7 @@ function OutputMockup() {
               fontFamily: 'Nunito Sans',
               fontWeight: 700,
               fontSize: 14,
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
             }}
           >
             3,5 oz · 06:00
@@ -1480,7 +1484,7 @@ function OutputMockup() {
             style={{
               fontFamily: 'Nunito Sans',
               fontSize: 10,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
               letterSpacing: 1.5,
               marginBottom: 8,
               textTransform: 'uppercase',
@@ -1501,7 +1505,7 @@ function OutputMockup() {
                 key={i}
                 style={{
                   flex: 1,
-                  background: i === 6 ? '#A8C4A2' : '#E5DCC9',
+                  background: i === 6 ? 'var(--ep-sage)' : 'var(--ep-oat)',
                   borderRadius: '3px 3px 0 0',
                   height: inView ? `${h}%` : '0%',
                   transition: `height 0.6s ease`,
@@ -1521,7 +1525,7 @@ function Feature3Section() {
     <section
       className="ep-section"
       style={{
-        background: '#FBF7F2',
+        background: 'var(--ep-cream)',
         padding: '100px 24px',
       }}
     >
@@ -1552,7 +1556,7 @@ function Feature3Section() {
                 fontFamily: 'Kalam, cursive',
                 fontWeight: 700,
                 fontSize: 'clamp(28px, 3.5vw, 42px)',
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
                 lineHeight: 1.2,
                 marginBottom: 16,
               }}
@@ -1565,7 +1569,7 @@ function Feature3Section() {
               style={{
                 fontFamily: 'Nunito Sans, sans-serif',
                 fontSize: 17,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
                 lineHeight: 1.7,
                 marginBottom: 28,
               }}
@@ -1596,7 +1600,7 @@ function NightModeSection() {
     <section
       className="ep-section"
       style={{
-        background: 'linear-gradient(135deg, #FBF7F2 0%, rgba(201,184,217,0.15) 100%)',
+        background: 'linear-gradient(135deg, var(--ep-cream) 0%, rgba(201,184,217,0.15) 100%)',
         padding: '100px 24px',
       }}
     >
@@ -1608,7 +1612,7 @@ function NightModeSection() {
               fontFamily: 'Nunito Sans, sans-serif',
               fontWeight: 700,
               fontSize: 'clamp(26px, 3.5vw, 40px)',
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
               marginBottom: 16,
               lineHeight: 1.3,
             }}
@@ -1620,7 +1624,7 @@ function NightModeSection() {
             style={{
               fontFamily: 'Nunito Sans, sans-serif',
               fontSize: 17,
-              color: '#5C574F',
+              color: 'var(--ep-soft-ink)',
               lineHeight: 1.7,
               maxWidth: 560,
               margin: '0 auto',
@@ -1651,7 +1655,7 @@ function NightModeSection() {
                       fontFamily: 'Nunito Sans',
                       fontSize: 10,
                       letterSpacing: 2,
-                      color: '#9A938A',
+                      color: 'var(--ep-muted)',
                       marginBottom: 12,
                       textTransform: 'uppercase',
                     }}
@@ -1660,7 +1664,7 @@ function NightModeSection() {
                   </p>
                   <div
                     style={{
-                      background: '#FBF7F2',
+                      background: 'var(--ep-cream)',
                       borderRadius: 14,
                       padding: '20px 16px',
                       marginBottom: 12,
@@ -1671,7 +1675,7 @@ function NightModeSection() {
                         fontFamily: 'Nunito Sans',
                         fontWeight: 800,
                         fontSize: 40,
-                        color: '#2D2A26',
+                        color: 'var(--ep-ink)',
                         fontVariantNumeric: 'tabular-nums',
                         textAlign: 'center',
                         marginBottom: 6,
@@ -1683,7 +1687,7 @@ function NightModeSection() {
                       style={{
                         fontFamily: 'Kalam',
                         fontSize: 13,
-                        color: '#6B8E68',
+                        color: 'var(--ep-sage-deep)',
                         textAlign: 'center',
                       }}
                     >
@@ -1694,14 +1698,14 @@ function NightModeSection() {
                     type="button"
                     style={{
                       width: '100%',
-                      background: '#E8B4B8',
+                      background: 'var(--ep-rose)',
                       border: 'none',
                       borderRadius: 12,
                       padding: '12px 0',
                       fontFamily: 'Nunito Sans',
                       fontWeight: 700,
                       fontSize: 13,
-                      color: '#FFFDF9',
+                      color: 'var(--ep-warm-white)',
                       cursor: 'pointer',
                     }}
                   >
@@ -1713,7 +1717,7 @@ function NightModeSection() {
                 style={{
                   fontFamily: 'Nunito Sans',
                   fontSize: 13,
-                  color: '#9A938A',
+                  color: 'var(--ep-muted)',
                   marginTop: 16,
                 }}
               >
@@ -1752,7 +1756,7 @@ function NightModeSection() {
                         fontFamily: 'Nunito Sans',
                         fontWeight: 800,
                         fontSize: 40,
-                        color: '#E8A87C',
+                        color: 'var(--ep-amber)',
                         fontVariantNumeric: 'tabular-nums',
                         textAlign: 'center',
                         marginBottom: 6,
@@ -1782,7 +1786,7 @@ function NightModeSection() {
                       fontFamily: 'Nunito Sans',
                       fontWeight: 700,
                       fontSize: 13,
-                      color: '#E8A87C',
+                      color: 'var(--ep-amber)',
                       cursor: 'pointer',
                     }}
                   >
@@ -1794,7 +1798,7 @@ function NightModeSection() {
                 style={{
                   fontFamily: 'Nunito Sans',
                   fontSize: 13,
-                  color: '#9A938A',
+                  color: 'var(--ep-muted)',
                   marginTop: 16,
                 }}
               >
@@ -1835,7 +1839,7 @@ function SocialProofSection() {
     <section
       className="ep-section"
       style={{
-        background: '#FFFDF9',
+        background: 'var(--ep-warm-white)',
         padding: '100px 24px',
       }}
     >
@@ -1847,7 +1851,7 @@ function SocialProofSection() {
               fontFamily: 'Nunito Sans, sans-serif',
               fontWeight: 700,
               fontSize: 'clamp(26px, 3.5vw, 40px)',
-              color: '#2D2A26',
+              color: 'var(--ep-ink)',
             }}
           >
             Disayangi Bunda di garis depan
@@ -1866,8 +1870,8 @@ function SocialProofSection() {
             <Reveal key={author} delay={i * 100}>
               <div
                 style={{
-                  background: '#FBF7F2',
-                  border: '1px solid #E8E1D5',
+                  background: 'var(--ep-cream)',
+                  border: '1px solid var(--ep-hairline)',
                   borderRadius: 20,
                   padding: '32px 28px 28px',
                   position: 'relative',
@@ -1893,7 +1897,7 @@ function SocialProofSection() {
 
                 <div style={{ display: 'flex', gap: 4, marginBottom: 16, position: 'relative' }}>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} style={{ color: '#E8A87C', fontSize: 13 }}>
+                    <span key={i} style={{ color: 'var(--ep-amber)', fontSize: 13 }}>
                       ★
                     </span>
                   ))}
@@ -1903,7 +1907,7 @@ function SocialProofSection() {
                   style={{
                     fontFamily: 'Kalam, cursive',
                     fontSize: 18,
-                    color: '#2D2A26',
+                    color: 'var(--ep-ink)',
                     lineHeight: 1.55,
                     marginBottom: 20,
                     position: 'relative',
@@ -1917,7 +1921,7 @@ function SocialProofSection() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
-                    borderTop: '1px solid #E8E1D5',
+                    borderTop: '1px solid var(--ep-hairline)',
                     paddingTop: 16,
                   }}
                 >
@@ -1926,7 +1930,7 @@ function SocialProofSection() {
                       width: 36,
                       height: 36,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #A8C4A2, #6B8E68)',
+                      background: 'linear-gradient(135deg, var(--ep-sage), var(--ep-sage-deep))',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1942,7 +1946,7 @@ function SocialProofSection() {
                         fontFamily: 'Nunito Sans',
                         fontWeight: 700,
                         fontSize: 14,
-                        color: '#6B8E68',
+                        color: 'var(--ep-sage-deep)',
                         lineHeight: 1.2,
                       }}
                     >
@@ -1952,7 +1956,7 @@ function SocialProofSection() {
                       style={{
                         fontFamily: 'Nunito Sans',
                         fontSize: 12,
-                        color: '#9A938A',
+                        color: 'var(--ep-muted)',
                       }}
                     >
                       {desc}
@@ -1972,8 +1976,8 @@ function SocialProofSection() {
               alignItems: 'center',
               gap: 24,
               padding: '16px 32px',
-              background: '#FBF7F2',
-              border: '1px solid #E8E1D5',
+              background: 'var(--ep-cream)',
+              border: '1px solid var(--ep-hairline)',
               borderRadius: 100,
               flexWrap: 'wrap',
               justifyContent: 'center',
@@ -1981,7 +1985,7 @@ function SocialProofSection() {
           >
             <div style={{ display: 'flex', gap: 3 }}>
               {Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} style={{ color: '#E8A87C', fontSize: 16 }}>
+                <span key={i} style={{ color: 'var(--ep-amber)', fontSize: 16 }}>
                   ★
                 </span>
               ))}
@@ -1991,7 +1995,7 @@ function SocialProofSection() {
                 fontFamily: 'Nunito Sans',
                 fontWeight: 700,
                 fontSize: 16,
-                color: '#2D2A26',
+                color: 'var(--ep-ink)',
               }}
             >
               4,9 / 5
@@ -2000,14 +2004,14 @@ function SocialProofSection() {
               style={{
                 width: 1,
                 height: 20,
-                background: '#E8E1D5',
+                background: 'var(--ep-hairline)',
               }}
             />
             <span
               style={{
                 fontFamily: 'Nunito Sans',
                 fontSize: 15,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
               }}
             >
               1.200+ Bunda mencatat tiap hari
@@ -2028,7 +2032,7 @@ function FinalCTASection() {
     <section
       className="ep-section"
       style={{
-        background: '#E8B4B8',
+        background: 'var(--ep-rose)',
         padding: '100px 24px',
         position: 'relative',
         overflow: 'hidden',
@@ -2078,7 +2082,7 @@ function FinalCTASection() {
               fontFamily: 'Kalam, cursive',
               fontWeight: 700,
               fontSize: 'clamp(30px, 4.5vw, 48px)',
-              color: '#FFFDF9',
+              color: 'var(--ep-warm-white)',
               lineHeight: 1.25,
               marginBottom: 32,
             }}
@@ -2126,7 +2130,7 @@ function FooterLink({ children }: { children: ReactNode }) {
       style={{
         fontFamily: 'Nunito Sans, sans-serif',
         fontSize: 14,
-        color: hovered ? '#C97B81' : '#5C574F',
+        color: hovered ? 'var(--ep-rose-deep)' : 'var(--ep-soft-ink)',
         textDecoration: 'none',
         transition: 'color 200ms ease',
         display: 'block',
@@ -2158,7 +2162,7 @@ function FooterSection() {
     <footer
       className="ep-footer"
       style={{
-        background: '#E5DCC9',
+        background: 'var(--ep-oat)',
         padding: '64px 24px 40px',
       }}
     >
@@ -2188,7 +2192,7 @@ function FooterSection() {
                   fontFamily: 'Kalam, cursive',
                   fontWeight: 700,
                   fontSize: 18,
-                  color: '#2D2A26',
+                  color: 'var(--ep-ink)',
                 }}
               >
                 EpingJourney
@@ -2198,7 +2202,7 @@ function FooterSection() {
               style={{
                 fontFamily: 'Nunito Sans, sans-serif',
                 fontSize: 14,
-                color: '#5C574F',
+                color: 'var(--ep-soft-ink)',
                 lineHeight: 1.6,
                 maxWidth: 220,
               }}
@@ -2215,7 +2219,7 @@ function FooterSection() {
                   fontFamily: 'Nunito Sans, sans-serif',
                   fontWeight: 700,
                   fontSize: 13,
-                  color: '#2D2A26',
+                  color: 'var(--ep-ink)',
                   letterSpacing: 0.5,
                   marginBottom: 16,
                   textTransform: 'uppercase',
@@ -2234,7 +2238,7 @@ function FooterSection() {
         <div
           style={{
             height: 1,
-            background: '#E8E1D5',
+            background: 'var(--ep-hairline)',
             marginBottom: 24,
           }}
         />
@@ -2253,7 +2257,7 @@ function FooterSection() {
             style={{
               fontFamily: 'Nunito Sans, sans-serif',
               fontSize: 13,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
             }}
           >
             © 2026 EpingJourney · Dibuat di 🇮🇩 · Bukan saran medis
@@ -2262,7 +2266,7 @@ function FooterSection() {
             style={{
               fontFamily: 'Nunito Sans, sans-serif',
               fontSize: 13,
-              color: '#9A938A',
+              color: 'var(--ep-muted)',
             }}
           >
             Made with 💗 for pumping moms
